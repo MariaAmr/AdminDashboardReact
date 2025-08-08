@@ -4,15 +4,19 @@ import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import flowbiteReact from "flowbite-react/plugin/vite";
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [tailwindcss(), react(), flowbiteReact()], 
+  plugins: [tailwindcss(), react(), flowbiteReact()],
   build: {
     outDir: "dist",
   },
   resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
+    alias: [
+      { find: "@", replacement: path.resolve(__dirname, "src") },
+      {
+        find: "@dashboard",
+        replacement: path.resolve(__dirname, "src/dashboard"),
+      },
+    ],
+    preserveSymlinks: true,
   },
 });
