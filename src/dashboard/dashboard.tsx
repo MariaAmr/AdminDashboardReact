@@ -270,7 +270,7 @@ const handleDropdownClick = (
           className="bg-gray-50 dark:bg-gray-900 mt-18 p-10 sm:p-5 antialiased  min-h-screen 
                 w-full mx-auto 
                 px-4 sm:px-6 md:px-8 lg:px-10 
-                py-4 sm:py-6 md:py-8 lg:py-8"
+                py-4 sm:py-4 md:py-8 lg:py-8"
         >
           <div
             className="bg-white dark:bg-gray-800 relative shadow-md rounded-lg 
@@ -847,7 +847,7 @@ const handleDropdownClick = (
         {/* End block */}
         {/* Create modal */}
         {showCreateModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 dark:bg-black/75">
+          <div className="fixed inset-0 z-51 flex items-center justify-center bg-black/75 dark:bg-black/75 pt-16">
             <div
               id="createUserModal"
               tabIndex={-1}
@@ -913,7 +913,7 @@ const handleDropdownClick = (
                       <div>
                         <label
                           htmlFor="email"
-                          className="block mb-2 text-sm font-medium bg-gradient-to-r from-blue-300 via-violet-600 to-sky-900 bg-clip-text text-transparent dark:text-gray-400"
+                          className="block mb-2 text-sm font-medium text-gray-900 dark:text-gray-400"
                         >
                           Email
                         </label>
@@ -1358,11 +1358,11 @@ const handleDropdownClick = (
         )}
         {/* Read modal */}
         {userToRead && (
-          <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/75 dark:bg-black/75  p-2 sm:p-4 scrollbar-hide ">
-            <div className="relative w-full max-w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto ">
-              <div className="relative bg-white rounded-lg shadow dark:bg-gray-800 p-4 sm:p-5   ">
-                <div className="flex justify-between mb-4 rounded-t sm:mb-5 ">
-                  <div className="text-lg text-gray-900 md:text-xl dark:text-gray-300">
+          <div className=" overflow-y-auto overflow-x-hidden  fixed inset-0 z-52 py-12 sm:pt-0 flex items-center justify-center bg-black/75 dark:bg-black/75 p-2 sm:p-4 ">
+            <div className="   relative w-full max-w-xl mx-4  max-h-[calc(100%-1rem)]">
+              <div className="relative  bg-white rounded-lg shadow dark:bg-gray-800 p-4 sm:p-5 ">
+                <div className=" flex justify-between  rounded-t sm:mb-5 ">
+                  <div className="text-lg text-gray-900 md:text-xl dark:text-gray-300 ">
                     <h3 className="font-semibold break-all dark:text-white capitalize mb-3">
                       {userToRead.username}
                     </h3>

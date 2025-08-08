@@ -37,7 +37,7 @@ export default function Navbar() {
   }, [isAuthenticated, username]);
 
   return (
-    <nav className="bg-white dark:bg-gray-900 dark:border dark:border-b-gray-800/[0.25] fixed top-0 left-0 right-0 z-900">
+    <nav className="bg-white dark:bg-gray-900 dark:border dark:border-b-gray-800/[0.25] fixed top-0 left-0 right-0 z-50">
       <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
         <Link
           to="/"
