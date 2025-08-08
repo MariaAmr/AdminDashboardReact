@@ -1,9 +1,11 @@
 import { LoaderCircle, Lock, User } from "lucide-react";
-import { type ChangeEvent, type FormEvent, useState } from "react";
+import { type ChangeEvent, type FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { login } from "../auth/auth";
-
+import { login, scheduleTokenRefresh } from "../auth/auth";
+import { useAuth } from "../auth/userAuth"; 
+import Loader from "../Loader/Loader";
 function Login() {
+  const { setAuthenticated } = useAuth(); // Add this line
   const [credentials, setCredentials] = useState({
     username: "",
     password: "",
@@ -12,9 +14,19 @@ function Login() {
     username: "",
     password: "",
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setSubmitting] = useState(false);
   const [authError, setAuthError] = useState("");
   const navigate = useNavigate();
+  
+  // Show loader for 2 seconds on initial page load
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -44,25 +56,37 @@ function Login() {
       setIsLoading(false);
       return;
     }
-
     try {
-      const { token } = await login({
+      const token = await login({
         username: credentials.username,
         password: credentials.password,
       });
-      localStorage.setItem("token", token);
-      navigate("/dashboard");
+
+      // 1. Save token to localStorage
+      localStorage.setItem("token", JSON.stringify(token));
+
+      // 2. Schedule token refresh
+      scheduleTokenRefresh(token);
+
+      // 3. Update auth state immediately
+      setAuthenticated(true, credentials.username); // <-- This is crucial
+
+      // 4. Navigate after state updates
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 2000);
     } catch (err) {
       setAuthError(
         err instanceof Error ? err.message : "Authentication failed"
       );
-    } finally {
       setIsLoading(false);
     }
   };
-
+  if (isLoading) {
+    return <Loader />;
+  }
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-300 p-4">
+     <div className="min-h-screen flex items-center justify-center bg-gray-300 p-4">
       <div className="w-full max-w-md bg-white rounded-lg shadow-md p-8">
         <h2 className="text-2xl font-bold text-center text-gray-800 mb-8">
           Sign in
@@ -95,6 +119,7 @@ function Login() {
                 className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Enter your username"
                 autoComplete="username"
+                disabled={isSubmitting}
               />
               {errors.username && (
                 <p className="mt-1 text-sm text-red-600">{errors.username}</p>
@@ -119,9 +144,10 @@ function Login() {
                 type="password"
                 value={credentials.password}
                 onChange={handleChange}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="••••••••"
                 autoComplete="current-password"
+                disabled={isSubmitting}
               />
               {errors.password && (
                 <p className="mt-1 text-sm text-red-600">{errors.password}</p>
@@ -139,10 +165,10 @@ function Login() {
 
           <button
             type="submit"
-            disabled={isLoading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-neutral-800 hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-75"
+            disabled={isSubmitting}
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-neutral-800 hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-500 disabled:opacity-75"
           >
-            {isLoading ? (
+            {isSubmitting ? (
               <>
                 <LoaderCircle className="animate-spin text-white mr-2 h-4 w-4" />
                 Signing in...
@@ -157,13 +183,17 @@ function Login() {
           Don't have an account?{" "}
           <Link
             to="/register"
-            className="font-medium text-gray-600 hover:text-gray-500"
+            className="font-medium text-blue-600 hover:text-blue-500"
           >
             Sign up
           </Link>
         </div>
       </div>
+
+      {/* Full-page loader during authentication */}
+      {isSubmitting && <Loader />}
     </div>
+  
   );
 }
 

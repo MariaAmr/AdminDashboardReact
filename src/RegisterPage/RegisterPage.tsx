@@ -2,7 +2,7 @@ import { LoaderCircle, Lock, Mail, UserRound } from "lucide-react";
 import { type ChangeEvent, type FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { register } from "../auth/auth";
-
+import { Toaster, toast } from "react-hot-toast";
 const Button = ({
   children,
   className = "",
@@ -78,13 +78,18 @@ const Input = ({
   </div>
 );
 
-
 export function RegisterPage() {
-  const [user, setUser] = useState({ username: "", email: "", password: "" });
+  const [user, setUser] = useState({
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
   const [errors, setErrors] = useState({
     username: "",
     email: "",
     password: "",
+    confirmPassword: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState("");
@@ -92,35 +97,49 @@ export function RegisterPage() {
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setUser({ ...user, [name]: value });
-    setErrors({ ...errors, [name]: "" });
+    setUser((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
     setAuthError("");
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    setAuthError("");
 
     // Validation
-    const newErrors = { username: "", email: "", password: "" };
-    if (!user.username.trim()) newErrors.username = "Please enter a username";
-    if (!user.password.trim()) newErrors.password = "Please enter a password";
+    const validationErrors = {
+      username: !user.username ? "Username is required" : "",
+      email: !user.email ? "Email is required" : "",
+      password: !user.password
+        ? "Password is required"
+        : user.password.length < 6
+        ? "Password must be at least 6 characters"
+        : "",
+      confirmPassword:
+        user.password !== user.confirmPassword ? "Passwords do not match" : "",
+    };
 
-    if (newErrors.username || newErrors.password) {
-      setErrors(newErrors);
+    if (Object.values(validationErrors).some((error) => error)) {
+      setErrors(validationErrors);
+      setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
     try {
-      const { token } = await register({
+      await register({
         username: user.username,
         email: user.email,
         password: user.password,
       });
-      localStorage.setItem("token", token);
-      navigate("/dashboard");
+
+      toast.success("Registration successful! Please login");
+      navigate("/login");
     } catch (err) {
-      setAuthError(err instanceof Error ? err.message : "Registration failed");
+      const errorMessage =
+        err instanceof Error ? err.message : "Registration failed";
+      setAuthError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -129,9 +148,10 @@ export function RegisterPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-300 p-4">
       <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-md">
-        
+        <Toaster position="top-center" />
+
         <h2 className="mb-8 text-center text-2xl font-semibold text-gray-800">
-          Sign up 
+          Create an account
         </h2>
 
         {authError && (
@@ -154,7 +174,7 @@ export function RegisterPage() {
 
           <Input
             type="email"
-            label="Email (optional)"
+            label="Email"
             name="email"
             placeholder="Enter your email"
             value={user.email}
@@ -167,10 +187,21 @@ export function RegisterPage() {
             type="password"
             label="Password"
             name="password"
-            placeholder="Create a password"
+            placeholder="Create a password (min 6 characters)"
             value={user.password}
             onChange={handleChange}
             error={errors.password}
+            icon={<Lock size={20} />}
+          />
+
+          <Input
+            type="password"
+            label="Confirm Password"
+            name="confirmPassword"
+            placeholder="Confirm your password"
+            value={user.confirmPassword}
+            onChange={handleChange}
+            error={errors.confirmPassword}
             icon={<Lock size={20} />}
           />
 

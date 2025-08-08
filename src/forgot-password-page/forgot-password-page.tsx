@@ -1,8 +1,9 @@
-import { LoaderCircle, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
 import { useState } from "react";
 import Button from "../button/button";
 import { usersDB } from "../auth/auth";
 import { Link } from "react-router-dom";
+import { Toaster, toast } from "react-hot-toast";
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
@@ -10,51 +11,90 @@ const ForgotPasswordPage = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    setError("");
     if (!email) {
       setError("Please enter your email");
       return;
     }
 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+
     setLoading(true);
 
-    setTimeout(() => {
+    try {
+      // Simulate API 
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       const userExists = usersDB.some((user) => user.email === email);
+
+      if (!userExists) {
+        throw new Error("No account found with this email address");
+      }
+
+    
+      setSuccess(true);
+      toast.success("Password reset link sent to your email!");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to send reset link";
+      setError(message);
+      toast.error(message);
+    } finally {
       setLoading(false);
-      setSuccess(userExists);
-      if (!userExists) setError("Email not found");
-    }, 1000);
+    }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-300 p-12">
-      <div className="w-full max-w-md space-y-6 rounded-lg bg-white p-8 shadow-md">
-        <h2 className="text-center text-2xl font-bold text-gray-800">
-          Forgot Password?
-        </h2>
+    <div className="flex min-h-screen items-center justify-center bg-gray-300 p-4 sm:p-12">
+      <div className="w-full max-w-md space-y-6 rounded-lg bg-white p-6 sm:p-8 shadow-md">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-800">Forgot Password?</h2>
+          <p className="mt-2 text-gray-600">
+            Enter your email to receive a reset link
+          </p>
+        </div>
 
         {success ? (
-          <div className="space-y-4 rounded bg-green-50 p-4 text-green-700">
-            <p>Password reset link sent to:</p>
-            <p className="font-medium">{email}</p>
+          <div className="space-y-4 rounded-lg bg-green-50 p-4 text-center">
+            <p className="text-green-700">Password reset link sent to:</p>
+            <p className="font-medium text-green-800">{email}</p>
+            <p className="text-sm text-green-600">
+              Check your inbox and follow the instructions
+            </p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-3 mt-9">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Email address
+              </label>
               <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-400" />
+                </div>
                 <input
                   type="email"
                   id="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={`w-full rounded-md border pl-10 pr-4 py-3   focus:outline-none focus:ring-2 ${
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setError("");
+                  }}
+                  className={`block w-full pl-10 pr-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                     error ? "border-red-500" : "border-gray-300"
                   }`}
-                  placeholder="Enter your email"
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                  disabled={loading}
                 />
-                <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-gray-400" />
               </div>
               {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
             </div>
@@ -63,29 +103,25 @@ const ForgotPasswordPage = () => {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-neutral-800 py-3 text-white hover:bg-neutral-700"
+                loading={loading}
+                className="w-full justify-center bg-neutral-800 hover:bg-neutral-700 text-white"
               >
-                {loading ? (
-                  <span className="flex items-center justify-center space-x-2">
-                    <LoaderCircle className="h-4 w-4 animate-spin" />
-                    <span>Sending...</span>
-                  </span>
-                ) : (
-                  "Reset Password"
-                )}
+                {loading ? "Sending..." : "Reset Password"}
               </Button>
             </div>
           </form>
         )}
 
-        <div className="pt-4 text-center">
-          <Link to={'/login'}
-            className="text-sm font-medium text-blue-600 hover:underline hover:text-blue-500"
+        <div className="text-center text-sm pt-4">
+          <Link
+            to="/login"
+            className="font-medium text-blue-600 hover:text-blue-500 hover:underline"
           >
             Back to Login
           </Link>
         </div>
       </div>
+      <Toaster position="top-center" />
     </div>
   );
 };
