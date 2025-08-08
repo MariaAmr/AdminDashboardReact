@@ -19,7 +19,8 @@ import RegisterPage from "./RegisterPage/RegisterPage";
 import ForgotPassword from "./forgot-password-page/forgot-password-page";
 import NotFoundPage from "./error/error";
 import { AuthRoute, ProtectedRoute } from "./ProtectedRoute";
-import Dashboard from "./dashboard/Dashboard";
+import Dashboard from "./dashboard/dashboard";
+
 
 
 

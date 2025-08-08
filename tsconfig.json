@@ -9,6 +9,7 @@
     "baseUrl": "./src",
     "paths": {
       "@/*": ["./*"],
+      "@/dashboard/dashboard": ["./dashboard/dashboard.tsx"]
     },
     "forceConsistentCasingInFileNames": true,
 
