@@ -66,7 +66,7 @@ export default function Footer() {
           <span className="text-[#767E94] dark:text-white">
             Coded with 💙 by{" "}
             <a
-              href="https://www.linkedin.com/in/abdulbasitprofile/"
+              href="www.linkedin.com/in/mariam-sarhan"
               target="_blank"
               className="text-gray-700 dark:text-white "
             >
