@@ -2,10 +2,11 @@ import { LoaderCircle, Lock, User } from "lucide-react";
 import { type ChangeEvent, type FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { login, scheduleTokenRefresh } from "../auth/auth";
-import { useAuth } from "../auth/userAuth"; 
+import { useAuth } from "../auth/userAuth";
 import Loader from "../Loader/Loader";
+
 function Login() {
-  const { setAuthenticated } = useAuth(); // Add this line
+  const { setAuthenticated } = useAuth();
   const [credentials, setCredentials] = useState({
     username: "",
     password: "",
@@ -14,15 +15,15 @@ function Login() {
     username: "",
     password: "",
   });
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setSubmitting] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [authError, setAuthError] = useState("");
   const navigate = useNavigate();
-  
+
   // Show loader for 2 seconds on initial page load
   useEffect(() => {
     const timer = setTimeout(() => {
-      setIsLoading(false);
+      setIsInitialLoad(false);
     }, 2000);
 
     return () => clearTimeout(timer);
@@ -43,8 +44,9 @@ function Login() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsSubmitting(true);
     setAuthError("");
+    setErrors({ username: "", password: "" });
 
     const validationErrors = {
       username: !credentials.username ? "Username is required" : "",
@@ -53,40 +55,38 @@ function Login() {
 
     if (validationErrors.username || validationErrors.password) {
       setErrors(validationErrors);
-      setIsLoading(false);
+      setIsSubmitting(false);
       return;
     }
+
     try {
       const token = await login({
         username: credentials.username,
         password: credentials.password,
       });
 
-      // 1. Save token to localStorage
       localStorage.setItem("token", JSON.stringify(token));
-
-      // 2. Schedule token refresh
       scheduleTokenRefresh(token);
+      setAuthenticated(true, credentials.username);
 
-      // 3. Update auth state immediately
-      setAuthenticated(true, credentials.username); // <-- This is crucial
-
-      // 4. Navigate after state updates
-        setTimeout(() => {
-          navigate("/dashboard");
-        }, 2000);
+      // Show success state briefly before navigating
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 2000);
     } catch (err) {
       setAuthError(
         err instanceof Error ? err.message : "Authentication failed"
       );
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
-  if (isLoading) {
+
+  if (isInitialLoad) {
     return <Loader />;
   }
+
   return (
-     <div className="min-h-screen flex items-center justify-center bg-gray-300 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-300 p-4">
       <div className="w-full max-w-md bg-white rounded-lg shadow-md p-8">
         <h2 className="text-2xl font-bold text-center text-gray-800 mb-8">
           Sign in
@@ -193,7 +193,6 @@ function Login() {
       {/* Full-page loader during authentication */}
       {isSubmitting && <Loader />}
     </div>
-  
   );
 }
 
