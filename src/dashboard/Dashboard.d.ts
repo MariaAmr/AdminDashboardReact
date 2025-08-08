@@ -1,1 +1,2 @@
-declare module "Dashboard";
+declare const Dashboard: React.FC;
+export default Dashboard;
