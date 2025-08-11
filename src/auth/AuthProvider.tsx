@@ -23,13 +23,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  // Setup storage event listener (only once)
+  // storage event listener (only once)
   useEffect(() => {
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
   }, [handleStorageChange]);
 
-  // Stable setAuthenticated function
+  //setAuthenticated function
   const setAuthenticated = useCallback(
     (auth: boolean, username: string = "") => {
       if (auth) {

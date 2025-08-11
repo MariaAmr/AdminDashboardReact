@@ -104,7 +104,7 @@ export async function register(newUser: {
 
       try {
         // 3. Hash password before storing
-        const hashedPassword = await bcrypt.hash(newUser.password, 10); // Salt rounds: 10
+        const hashedPassword = await bcrypt.hash(newUser.password, 10);
         const userToStore: User = {
           username: newUser.username,
           password: hashedPassword, // Store hashed password, NOT plaintext
@@ -133,7 +133,6 @@ export async function register(newUser: {
 export function scheduleTokenRefresh(token: JwtToken) {
   if (refreshTimeout) clearTimeout(refreshTimeout);
 
-  // Refresh 1 minute before expiration (convert exp to milliseconds for comparison)
   const refreshTime = token.exp * 1000 - 60000;
   const timeUntilRefresh = refreshTime - Date.now();
 
@@ -159,7 +158,7 @@ export const validateToken = (token: JwtToken | null): boolean => {
 export async function logout(): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(() => {
-      // Clear all auth-related items from storage
+    
       localStorage.removeItem("token");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("username");  // Add this line

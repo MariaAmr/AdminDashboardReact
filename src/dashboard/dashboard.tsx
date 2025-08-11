@@ -39,7 +39,7 @@ const Dashboard: React.FC = () => {
 const [dropdownPosition, setDropdownPosition] = useState<"above" | "below">(
   "below"
 );
-// Load data - in a real app you might fetch from an API
+// Load data 
   useEffect(() => {
     setUsers(userData);
   }, []);
@@ -121,8 +121,6 @@ const resetAllFilters = () => {
       )
     );
     setShowUpdateModal(false);
-
-    // Optional: Reset to first page after update
     setCurrentPage(1);
   };
   // Reset page on search
@@ -571,7 +569,7 @@ const handleDropdownClick = (
             {/* Table content */}
             <div className="overflow-x-auto rounded-t-2xl">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm text-left text-gray-500 dark:text-gray-400  ">
-                <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 ">
                   <tr>
                     <th scope="col" className="px-4 py-3">
                       Username
@@ -594,15 +592,22 @@ const handleDropdownClick = (
                   </tr>
                 </thead>
                 <tbody>
-                  {currentUsers.map((user) => (
+                  {currentUsers.map((user, index) => (
                     <tr
                       key={user.id}
-                      className="border-b dark:border-gray-400 dark:text-gray-900 dark:bg-gray-200"
+                      className={`
+        border-b dark:border-gray-400 dark:text-gray-200
+        ${
+          index % 2 === 0
+            ? "dark:bg-gray-200/[0.25]"
+            : "dark:bg-gray-400/[0.25]"
+        }
+      `}
                     >
-                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-900 dark:bg-gray-200">
+                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-200">
                         <div className="flex flex-col">
                           <span>{user.username}</span>
-                          <span className="text-xs text-gray-500 sm:hidden ">
+                          <span className="text-xs text-gray-500 sm:hidden">
                             {user.roleCode || "No role"} •{" "}
                             {user.department || "No dept"}
                           </span>
@@ -658,14 +663,14 @@ const handleDropdownClick = (
                               } right-0`}
                               onClick={(e) => e.stopPropagation()}
                             >
-                              <ul className="py-1 px-0 mb-0 dark:text-gray-900 dark:bg-gray-200 ">
+                              <ul className="py-1 px-0 mb-0 dark:text-gray-300 dark:bg-gray-300/[0.25] ">
                                 <li>
                                   <button
                                     onClick={() => {
                                       setUserToRead(user);
                                       setActiveDropdown(null);
                                     }}
-                                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-300 "
+                                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 "
                                   >
                                     <svg
                                       className="mr-2 h-4 w-4"
@@ -696,7 +701,7 @@ const handleDropdownClick = (
                                       handleOpenUpdateModal(user.id);
                                       setActiveDropdown(null);
                                     }}
-                                    className="flex w-full items-center px-4 py-2 text-gray-700 hover:bg-gray-100  dark:text-gray-900 dark:hover:bg-gray-300 "
+                                    className="flex w-full items-center px-4 py-2 text-gray-700 hover:bg-gray-100  dark:text-gray-300 dark:hover:bg-gray-600  "
                                   >
                                     <svg
                                       className="w-4 h-4 mr-2"
@@ -754,18 +759,18 @@ const handleDropdownClick = (
 
             {/* Pagination */}
             <nav
-              className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4 dark:bg-gray-200 rounded-b-2xl shadow-sm"
+              className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4  rounded-b-2xl shadow-sm dark:bg-gray-700 dark:text-gray-400"
               aria-label="Table navigation"
             >
-              <span className="text-sm font-normal text-gray-500 dark:text-gray-600">
+              <span className="text-sm font-normal text-gray-500 dark:text-gray-200">
                 Showing
-                <span className="font-semibold text-gray-900 dark:text-gray-800">
+                <span className="font-semibold text-gray-900 dark:text-gray-400">
                   {" "}
                   {indexOfFirstUser + 1}-
                   {Math.min(indexOfLastUser, filteredUsers.length)}
                 </span>
                 {" of "}
-                <span className="font-semibold text-gray-900 dark:text-gray-800">
+                <span className="font-semibold text-gray-900 dark:text-gray-400">
                   {filteredUsers.length}
                 </span>
               </span>
@@ -804,7 +809,7 @@ const handleDropdownClick = (
                         onClick={() => paginate(number)}
                         className={`flex items-center justify-center text-sm py-2 px-3 leading-tight border ${
                           currentPage === number
-                            ? "text-primary-600 bg-primary-50 border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                            ? "text-primary-600 bg-primary-50 border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
                             : "text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
                         }`}
                       >
@@ -821,7 +826,7 @@ const handleDropdownClick = (
                     className={`flex items-center justify-center h-full py-1.5 px-3 leading-tight rounded-r-lg border ${
                       currentPage === totalPages
                         ? "text-gray-400 bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 cursor-not-allowed"
-                        : "text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+                        : "text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
                     }`}
                   >
                     <span className="sr-only">Next</span>

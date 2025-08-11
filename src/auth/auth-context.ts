@@ -3,7 +3,7 @@ import { createContext } from "react";
 type AuthContextType = {
   isAuthenticated: boolean;
   username: string;
-  setAuthenticated: (auth: boolean, username: string) => void; // Made username required
+  setAuthenticated: (auth: boolean, username: string) => void; 
   logout: () => Promise<void>;
 };
 
