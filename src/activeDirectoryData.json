@@ -1,0 +1,22 @@
+[
+  {
+    "id": 4,
+    "name": "Dashi",
+    "description": "Active Directory for Dashi"
+  },
+  {
+    "id": 1005,
+    "name": "AD_124",
+    "description": "Active Directory for AD_124"
+  },
+  {
+    "id": 55,
+    "name": "AD_125",
+    "description": "Active Directory for AD_125"
+  },
+  {
+    "id": 56,
+    "name": "AD_126",
+    "description": "Active Directory for AD_126"
+  }
+]

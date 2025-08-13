@@ -12,11 +12,17 @@ export default defineConfig({
   resolve: {
     alias: [
       { find: "@", replacement: path.resolve(__dirname, "src") },
-       { 
-      find: '@/dashboard/dashboard',  
-      replacement: path.resolve(__dirname, 'src/dashboard/dashboard.tsx')
-    },
+      {
+        find: "@/dashboard/dashboard",
+        replacement: path.resolve(__dirname, "src/dashboard/dashboard.tsx"),
+      },
     ],
     preserveSymlinks: true,
+  },
+  optimizeDeps: {
+    exclude: ["flowbite-react"],
+  },
+  esbuild: {
+    logOverride: { "this-is-undefined-in-esm": "silent" },
   },
 });

@@ -29,7 +29,7 @@ const socialLinks = [
 ];
 export default function Footer() {
   return (
-    <footer className="relative z-50 bg-white  dark:bg-gray-900 dark:border dark:border-t-gray-700/[0.25]">
+    <footer className="relative z-10 bg-white  dark:bg-gray-900 dark:border dark:border-t-gray-700/[0.25]">
       <div className="flex flex-col items-center p-4">
         {/* social links */}
         <div className="mt-3">
@@ -66,7 +66,7 @@ export default function Footer() {
           <span className="text-[#767E94] dark:text-white">
             Coded with 💙 by{" "}
             <a
-              href="www.linkedin.com/in/mariam-sarhan"
+              href="https://www.linkedin.com/in/mariam-sarhan/"
               target="_blank"
               className="text-gray-700 dark:text-white "
             >

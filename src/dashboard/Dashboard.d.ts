@@ -1,2 +1,2 @@
-declare const Dashboard: React.FC;
-export default Dashboard;
+// declare const Dashboard: React.FC;
+// export default Dashboard;

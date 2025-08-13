@@ -21,18 +21,15 @@ import NotFoundPage from "./error/error";
 import { AuthRoute, ProtectedRoute } from "./ProtectedRoute";
 import Dashboard from "./dashboard/dashboard";
 
-
-
-
-
-
 function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </BrowserRouter>
+  
+      <BrowserRouter>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </BrowserRouter>
+   
   );
 }
 
@@ -101,7 +98,9 @@ function AppContent() {
 
         {/* Protected routes */}
         <Route element={<ProtectedRoute />}>
+
           <Route path="/dashboard" element={<Dashboard />} />
+
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />
