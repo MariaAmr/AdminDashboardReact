@@ -98,9 +98,12 @@ function AppContent() {
 
         {/* Protected routes */}
         <Route element={<ProtectedRoute />}>
-
-          <Route path="/dashboard" element={<Dashboard />} />
-
+          <Route path="/dashboard" element={<Dashboard />}>
+            <Route index element={null} />
+            <Route path="users" element={null} />
+            <Route path="business-units" element={null} /> {/* Fixed path */}
+            <Route path="active-directories" element={null} />
+          </Route>
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />

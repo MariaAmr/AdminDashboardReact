@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import DataTable from "../components/DataTable";
 import userData from "../usersData.json";
 import businessUnitData from "../businessUnitData.json";
@@ -14,6 +14,7 @@ import Pagination from "../components/Pagination";
 import EditModal from "../components/EditModal";
 import { motion } from "framer-motion";
 
+import { useNavigate } from "react-router-dom";
 interface User {
   id: string;
   username: string;
@@ -43,7 +44,7 @@ interface BusinessUnit {
 export interface ActiveDirectory {
   id: string;
   name: string;
-  description: string;
+  description?: string;
 }
 
 const Dashboard: React.FC = () => {
@@ -51,15 +52,15 @@ const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
 
   // Data states
-const [users, setUsers] = useState<User[]>(() => {
-  return userData.map(
-    (user) =>
-      ({
-        ...user,
-        // Only add properties that need transformation or don't exist in user
-      } as User)
-  );
-});
+  const [users, setUsers] = useState<User[]>(() => {
+    return userData.map(
+      (user) =>
+        ({
+          ...user,
+          // Only add properties that need transformation or don't exist in user
+        } as User)
+    );
+  });
   const [businessUnits, setBusinessUnits] =
     useState<BusinessUnit[]>(businessUnitData);
   const [activeDirectories, setActiveDirectories] =
@@ -67,6 +68,8 @@ const [users, setUsers] = useState<User[]>(() => {
 
   // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+
   const [newUser, setNewUser] = useState<Partial<User>>({});
   const [newBusinessUnit, setNewBusinessUnit] = useState<Partial<BusinessUnit>>(
     {}
@@ -95,39 +98,40 @@ const [users, setUsers] = useState<User[]>(() => {
     activeDirectories: 1,
   });
   //handle edit functionality
-const [editingItem, setEditingItem] = useState<any>(null);
-const [showEditModal, setShowEditModal] = useState(false);
+  const [editingItem, setEditingItem] = useState<any>(null);
 
-const handleEdit = (item: any) => {
-  setEditingItem(item);
-  setShowEditModal(true);
-};
+  const navigate = useNavigate();
+  const handleEdit = (item: any) => {
+    setEditingItem(item);
+    setShowEditModal(true);
+  };
 
-const handleUpdate = (updatedItem: any) => {
-  // Update your state based on activeTab
-  switch (activeTab) {
-    case "users":
-      setUsers(
-        users.map((user) => (user.id === updatedItem.id ? updatedItem : user))
-      );
-      break;
-    case "businessUnits":
-      setBusinessUnits(
-        businessUnits.map((unit) =>
-          unit.id === updatedItem.id ? updatedItem : unit
-        )
-      );
-      break;
-    case "activeDirectories":
-      setActiveDirectories(
-        activeDirectories.map((ad) =>
-          ad.id === updatedItem.id ? updatedItem : ad
-        )
-      );
-      break;
-  }
-  setShowEditModal(false);
-};
+  const handleUpdate = (updatedItem: any) => {
+    switch (activeTab) {
+      case "users":
+        setUsers(
+          users.map((user) => (user.id === updatedItem.id ? updatedItem : user))
+        );
+        break;
+      case "businessUnits":
+        setBusinessUnits(
+          businessUnits.map((unit) =>
+            unit.id === updatedItem.id ? updatedItem : unit
+          )
+        );
+        break;
+      case "activeDirectories":
+        setActiveDirectories(
+          activeDirectories.map((ad) =>
+            ad.id === updatedItem.id ? updatedItem : ad
+          )
+        );
+        break;
+    }
+    setShowEditModal(false);
+    setEditingItem(null);
+  };
+
   //   const { paginatedData, totalItems } = useMemo(() => {
   //   const data = currentData;
   //   const currentPage = currentPages[activeTab] || 1;
@@ -237,8 +241,19 @@ const handleUpdate = (updatedItem: any) => {
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
   };
-
   const handleAddItem = () => {
+    // Reset create form data when opening create modal
+    switch (activeTab) {
+      case "users":
+        setNewUser({ status: "ACTIVE" });
+        break;
+      case "businessUnits":
+        setNewBusinessUnit({});
+        break;
+      case "activeDirectories":
+        setNewActiveDirectory({});
+        break;
+    }
     setShowCreateModal(true);
   };
   const handleSortChange = (key: string) => {
@@ -248,37 +263,24 @@ const handleUpdate = (updatedItem: any) => {
     }));
     setCurrentPages((prev) => ({ ...prev, [activeTab]: 1 })); // Reset to page 1
   };
-  const handleCreateUser = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCreateUser = (userData: Partial<User>) => {
     const newId = Math.random().toString(36).substring(2, 9);
-    setUsers([...users, { ...newUser, id: newId } as User]);
+    setUsers([...users, { ...userData, id: newId } as User]);
     setShowCreateModal(false);
-    setNewUser({});
+    setNewUser({ status: "ACTIVE" });
     setCurrentPages((prev) => ({ ...prev, users: 1 }));
   };
 
-  const handleCreateBusinessUnit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newId = Math.random().toString(36).substring(2, 9);
-    setBusinessUnits([
-      ...businessUnits,
-      { ...newBusinessUnit, id: newId } as BusinessUnit,
-    ]);
+  const handleCreateBusinessUnit = (businessUnit: BusinessUnit) => {
+    setBusinessUnits([...businessUnits, businessUnit]);
     setShowCreateModal(false);
     setNewBusinessUnit({});
   };
-
-  const handleCreateActiveDirectory = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newId = Math.random().toString(36).substring(2, 9);
-    setActiveDirectories([
-      ...activeDirectories,
-      { ...newActiveDirectory, id: newId } as ActiveDirectory,
-    ]);
+  const handleCreateActiveDirectory = (directory: ActiveDirectory) => {
+    setActiveDirectories([...activeDirectories, directory]);
     setShowCreateModal(false);
     setNewActiveDirectory({});
   };
-
   const renderCreateModal = () => {
     switch (activeTab) {
       case "users":
@@ -287,13 +289,12 @@ const handleUpdate = (updatedItem: any) => {
             show={showCreateModal}
             onClose={() => {
               setShowCreateModal(false);
-              setNewUser({});
-              setEditingItem(null); // Clear editing item when closing
+              setNewUser({ status: "ACTIVE" });
             }}
-            onSubmit={editingItem ? handleUpdate : handleCreateUser}
-            userData={(editingItem as Partial<User>) || newUser}
-            setUserData={editingItem ? setEditingItem : setNewUser}
-            isEditing={!!editingItem} // Pass editing state to modal
+            onSubmit={handleCreateUser}
+            userData={newUser}
+            setUserData={setNewUser}
+            isEditing={false}
           />
         );
       case "businessUnits":
@@ -303,16 +304,10 @@ const handleUpdate = (updatedItem: any) => {
             onClose={() => {
               setShowCreateModal(false);
               setNewBusinessUnit({});
-              setEditingItem(null); // Clear editing item when closing
             }}
-            onSubmit={editingItem ? handleUpdate : handleCreateBusinessUnit}
-            businessUnitData={
-              (editingItem as Partial<BusinessUnit>) || newBusinessUnit
-            }
-            setBusinessUnitData={
-              editingItem ? setEditingItem : setNewBusinessUnit
-            }
-            isEditing={!!editingItem} // Pass editing state to modal
+            onSubmit={handleCreateBusinessUnit}
+            businessUnitData={newBusinessUnit}
+            setBusinessUnitData={setNewBusinessUnit}
           />
         );
       case "activeDirectories":
@@ -322,18 +317,57 @@ const handleUpdate = (updatedItem: any) => {
             onClose={() => {
               setShowCreateModal(false);
               setNewActiveDirectory({});
-              setEditingItem(null); // Clear editing item when closing
             }}
-            onSubmit={
-              editingItem ? handleUpdate : handleCreateActiveDirectory
-            }
-            activeDirectoryData={
-              (editingItem as Partial<ActiveDirectory>) || newActiveDirectory
-            }
-            setActiveDirectoryData={
-              editingItem ? setEditingItem : setNewActiveDirectory
-            }
-            isEditing={!!editingItem} // Pass editing state to modal
+            onSubmit={handleCreateActiveDirectory}
+            activeDirectoryData={newActiveDirectory}
+            setActiveDirectoryData={setNewActiveDirectory}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+  const renderEditModal = () => {
+    if (!editingItem) return null;
+
+    switch (activeTab) {
+      case "users":
+        return (
+          <EditModal
+            item={editingItem}
+            onClose={() => {
+              setShowEditModal(false);
+              setEditingItem(null);
+            }}
+            onSave={handleUpdate}
+            type={activeTab}
+            isEditing={true}
+          />
+        );
+      case "businessUnits":
+        return (
+          <EditModal
+            item={editingItem}
+            onClose={() => {
+              setShowEditModal(false);
+              setEditingItem(null);
+            }}
+            onSave={handleUpdate}
+            type={activeTab}
+            isEditing={true}
+          />
+        );
+      case "activeDirectories":
+        return (
+          <EditModal
+            item={editingItem}
+            onClose={() => {
+              setShowEditModal(false);
+              setEditingItem(null);
+            }}
+            onSave={handleUpdate}
+            type={activeTab}
+            isEditing={true}
           />
         );
       default:
@@ -372,42 +406,77 @@ const handleUpdate = (updatedItem: any) => {
     }
     setSelectedItems([]);
   };
-const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
 
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.endsWith("/users")) setActiveTab("users");
+    else if (path.endsWith("/business-units")) setActiveTab("businessUnits");
+    else if (path.endsWith("/active-directories"))
+      setActiveTab("activeDirectories");
+    else setActiveTab("dashboard");
+  }, [location.pathname]);
+   const handleCardClick = (path: string) => {
+     navigate(path);
+   };
+
+  const dashboardCards = [
+    {
+      title: "Users Management",
+      description: "View and manage all system users.",
+      path: "/dashboard/users",
+      initial: { opacity: 0, x: -50 },
+      delay: 0.2,
+    },
+    {
+      title: "Business Units",
+      description: "Manage organizational units.",
+      path: "/dashboard/business-units",
+      initial: { opacity: 0, y: 50 },
+      delay: 0.3,
+    },
+    {
+      title: "Active Directories",
+      description: "Configure directory integrations.",
+      path: "/dashboard/active-directories",
+      initial: { opacity: 0, x: 50 },
+      delay: 0.4,
+    },
+  ];
   return (
     <>
       <Navbar />
-      <div className="flex">
+      <div className="flex h-[calc(100vh-4.5rem)]">
         <Sidebar
           collapsed={collapsed}
           setCollapsed={setCollapsed}
           onTabChange={handleTabChange}
           activeTab={activeTab}
         />
-
         <main
-          className="bg-gray-50 dark:bg-gray-900 mt-18  sm:p-5 antialiased 
-                w-full mx-auto 
-                px-4 sm:px-6 md:px-8 lg:px-10 
-                py-4 sm:py-4 md:py-8 lg:pt-4"
+          className="bg-gray-50 dark:bg-gray-900 mt-18 sm:p-5 antialiased 
+            w-full mx-auto 
+            px-4 sm:px-6 md:px-8 lg:px-10 
+            py-4 sm:py-4 md:py-8 lg:pt-4
+            overflow-x-hidden"
         >
           <div
             className="bg-white dark:bg-gray-800 relative shadow-md rounded-lg 
-                w-full mx-auto 
-                px-4 sm:px-6 md:px-8 lg:px-25 
-                py-4 sm:py-6 md:py-8 lg:py-8
-                max-w-screen-sm sm:max-w-screen-md md:max-w-screen-lg lg:max-w-screen-xl xl:max-w-screen-2xl"
+              w-full mx-auto 
+              px-4 sm:px-6 md:px-8 lg:px-8 
+              py-4 sm:py-6 md:py-8 lg:py-8
+              max-w-screen-sm sm:max-w-screen-md md:max-w-screen-lg lg:max-w-screen-xl xl:max-w-screen-2xl"
           >
             {activeTab === "dashboard" ? (
-              <div className=" py-20 flex flex-col items-center">
-                <div className="text-center py-10 animate-fade-in">
+              <div className="py-20 flex flex-col items-center">
+                <div className="text-center py-10 animate-fade-in w-full">
                   <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
                   >
-                    <h1 className="text-4xl font-bold ">
+                    <h1 className="text-4xl font-bold">
                       Welcome to the Dashboard
                     </h1>
                     <p className="mt-4 mb-15">
@@ -415,117 +484,47 @@ const [searchTerm, setSearchTerm] = useState("");
                     </p>
                   </motion.div>
 
-                  <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6 px-4">
-                    {/* Users Card */}
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      initial={{ opacity: 0, x: -50 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.5, delay: 0.2 }}
-                      onClick={() => setActiveTab("users")}
-                      className="cursor-pointer"
-                    >
-                      <div className="h-full transition-all hover:shadow-lg dark:hover:bg-gray-700/50">
-                        <div className="p-5">
-                          <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-                            Users Management
-                          </h5>
-                          <p className="font-normal text-gray-700 dark:text-gray-400 mt-3">
-                            View and manage all system users, their roles and
-                            permissions.
-                          </p>
-                          <button className="mt-4 mx-auto gap-2 flex justify-center content-center text-primary-600">
-                            Go to Users
-                            <svg
-                              className=" w-4"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          </button>
+                  <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6 px-4 w-full">
+                    {dashboardCards.map((card, index) => (
+                      <motion.div
+                        key={index}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        initial={card.initial}
+                        animate={{ opacity: 1, x: 0, y: 0 }}
+                        transition={{ duration: 0.5, delay: card.delay }}
+                        onClick={() => handleCardClick(card.path)}
+                        className="cursor-pointer min-w-0"
+                      >
+                        <div className="h-full transition-all hover:shadow-lg dark:hover:bg-gray-700/50">
+                          <div className="p-5">
+                            <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+                              {card.title}
+                            </h5>
+                            <p className="font-normal text-gray-700 dark:text-gray-400 mt-3">
+                              {card.description}
+                            </p>
+                            <button className="mt-4 mx-auto gap-2 flex justify-center content-center text-primary-600">
+                              Go to{" "}
+                              {card.path === "activeDirectories"
+                                ? "Directories"
+                                : card.title.split(" ")[0]}
+                              <svg
+                                className="w-4"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    </motion.div>
-
-                    {/* Business Units Card */}
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      initial={{ opacity: 0, y: 50 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: 0.3 }}
-                      onClick={() => setActiveTab("businessUnits")}
-                      className="cursor-pointer"
-                    >
-                      <div className="h-full transition-all hover:shadow-lg dark:hover:bg-gray-700/50">
-                        <div className="p-5">
-                          <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-                            Business Units
-                          </h5>
-                          <p className="font-normal text-gray-700 dark:text-gray-400 mt-3">
-                            Manage organizational business units and
-                            departments.
-                          </p>
-                          <button className="mt-4 mx-auto gap-2 flex justify-center content-center text-primary-600">
-                            Go to Business Units
-                            <svg
-                              className=" w-4"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                    </motion.div>
-
-                    {/* Active Directories Card */}
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      initial={{ opacity: 0, x: 50 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.5, delay: 0.4 }}
-                      onClick={() => setActiveTab("activeDirectories")}
-                      className="cursor-pointer"
-                    >
-                      <div className="h-full transition-all hover:shadow-lg dark:hover:bg-gray-700/50">
-                        <div className="p-5">
-                          <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-                            Active Directories
-                          </h5>
-                          <p className="font-normal text-gray-700 dark:text-gray-400 mt-3">
-                            Configure and manage your active directory
-                            integrations.
-                          </p>
-                          <button className="mt-4 mx-auto gap-2 flex justify-center content-center text-primary-600">
-                            Go to Directories
-                            <svg
-                              className="w-4"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                    </motion.div>
+                      </motion.div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -551,33 +550,26 @@ const [searchTerm, setSearchTerm] = useState("");
                 onSearchChange={setSearchTerm}
               />
             )}
-            <Pagination
-              currentPage={currentPages[activeTab]}
-              totalPages={Math.ceil(totalItems / itemsPerPage)}
-              totalItems={totalItems}
-              itemsPerPage={itemsPerPage}
-              onPageChange={handlePageChange}
-              entityType={
-                activeTab === "users"
-                  ? "users"
-                  : activeTab === "businessUnits"
-                  ? "businessUnits"
-                  : "activeDirectory"
-              }
-            />
+            {activeTab !== "dashboard" && (
+              <Pagination
+                currentPage={currentPages[activeTab]}
+                totalPages={Math.ceil(totalItems / itemsPerPage)}
+                totalItems={totalItems}
+                itemsPerPage={itemsPerPage}
+                onPageChange={handlePageChange}
+                entityType={
+                  activeTab === "users"
+                    ? "users"
+                    : activeTab === "businessUnits"
+                    ? "businessUnits"
+                    : "activeDirectory"
+                }
+              />
+            )}
           </div>
         </main>
-
         {showCreateModal && renderCreateModal()}
-
-        {showEditModal && editingItem && (
-          <EditModal
-            item={editingItem}
-            onClose={() => setShowEditModal(false)}
-            onSave={handleUpdate}
-            type={activeTab}
-          />
-        )}
+        {showEditModal && renderEditModal()}
       </div>
       <Footer />
     </>

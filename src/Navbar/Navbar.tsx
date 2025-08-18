@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { MoonIcon, SunIcon, Bars3Icon } from "@heroicons/react/24/outline";
 import { useAuth } from "../auth/userAuth";
@@ -32,9 +32,9 @@ export default function Navbar() {
 
   const dropdownItems = [{ name: "Sign out", onClick: handleSignOut }];
 
-  useEffect(() => {
-    console.log("Auth context changed:", { isAuthenticated, username });
-  }, [isAuthenticated, username]);
+  // useEffect(() => {
+  //   console.log("Auth context changed:", { isAuthenticated, username });
+  // }, [isAuthenticated, username]);
 
   return (
     <nav className="bg-white dark:bg-gray-900 dark:border dark:border-b-gray-800/[0.25] fixed top-0 left-0 right-0 z-50">

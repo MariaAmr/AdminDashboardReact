@@ -22,36 +22,61 @@ const PreviewModal: React.FC<PreviewModalProps> = ({
       .replace(/^./, (str) => str.toUpperCase());
   };
 
-  const formatValue = (value: any) => {
-    if (value === null || value === undefined) return "N/A";
-    if (typeof value === "boolean") return value ? "Yes" : "No";
-    if (Array.isArray(value)) return value.join(", ");
-    return String(value);
-  };
+ const formatValue = (value: any, key: string) => {
+   // Hide password fields
+   if (key.toLowerCase().includes("password")) return "••••••••";
+
+   // Handle null/undefined
+   if (value === null || value === undefined) return "N/A";
+
+   // Handle boolean values
+   if (typeof value === "boolean") return value ? "Yes" : "No";
+
+   // Handle arrays
+   if (Array.isArray(value)) return value.join(", ");
+
+   // Handle dates
+   if (key.toLowerCase().includes("date") || key.toLowerCase().includes("at")) {
+     try {
+       return new Date(value).toLocaleString();
+     } catch {
+       return String(value);
+     }
+   }
+
+   return String(value);
+ };
 
   const handleEdit = () => {
     onEdit(item);
     onClose();
   };
 
-  const renderPreviewContent = () => {
-    return (
-      <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2">
-        {Object.entries(item).map(([key, value]) => (
-          <div key={key} className="mb-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 truncate">
-              {formatLabel(key)}
-            </label>
-            <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded-lg border border-gray-200 dark:border-gray-600 min-h-[3rem] break-words">
-              <p className="text-gray-900 dark:text-gray-200 text-sm">
-                {formatValue(value)}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  };
+ const renderPreviewContent = () => {
+   // Filter out sensitive fields
+   const filteredItem = Object.fromEntries(
+     Object.entries(item).filter(
+       ([key]) => !key.toLowerCase().includes("password")
+     )
+   );
+
+   return (
+     <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2">
+       {Object.entries(filteredItem).map(([key, value]) => (
+         <div key={key} className="mb-2">
+           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 truncate">
+             {formatLabel(key)}
+           </label>
+           <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded-lg border border-gray-200 dark:border-gray-600 min-h-[3rem] break-words">
+             <p className="text-gray-900 dark:text-gray-200 text-sm">
+               {formatValue(value, key)}
+             </p>
+           </div>
+         </div>
+       ))}
+     </div>
+   );
+ };
 
   const getTitle = () => {
     switch (type) {

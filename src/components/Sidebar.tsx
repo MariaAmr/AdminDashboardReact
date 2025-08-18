@@ -8,11 +8,12 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import clsx from "clsx";
+import { useNavigate } from "react-router-dom";
 
-export  type TabType =
+export type TabType =
   | "dashboard"
   | "users"
   | "businessUnits"
@@ -32,25 +33,63 @@ const Sidebar = ({
   activeTab,
 }: SidebarProps) => {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  const getPageTitle = (tab: TabType) => {
+    const titles = {
+      dashboard: "Dashboard Overview",
+      users: "User Management",
+      businessUnits: "Business Units",
+      activeDirectories: "Active Directories",
+    };
+    return `${titles[tab]}`;
+  };
 
   const handleTabClick = (e: React.MouseEvent, tab: TabType) => {
     e.preventDefault();
     e.stopPropagation();
     onTabChange(tab);
+
+    // Updated to use path-based navigation
+    const pathMap = {
+      dashboard: "/dashboard",
+      users: "/dashboard/users",
+      businessUnits: "/dashboard/business-units",
+      activeDirectories: "/dashboard/active-directories", // Added this line
+    };
+
+    navigate(pathMap[tab], { replace: true });
+    document.title = getPageTitle(tab);
   };
 
+  useEffect(() => {
+    document.title = getPageTitle(activeTab);
+  }, [activeTab]);
+
   const links = [
-    { icon: LayoutDashboard, label: "Dashboard", tab: "dashboard" as TabType },
-    { icon: Users, label: "Users", tab: "users" as TabType },
+    {
+      icon: LayoutDashboard,
+      label: "Dashboard",
+      tab: "dashboard" as TabType,
+      path: "/dashboard",
+    },
+    {
+      icon: Users,
+      label: "Users",
+      tab: "users" as TabType,
+      path: "/dashboard/users", // Updated path
+    },
     {
       icon: KeySquare,
       label: "Active Directory",
       tab: "activeDirectories" as TabType,
+      path: "/dashboard/active-directories", // Updated path
     },
     {
       icon: Building2,
       label: "Business Unit",
       tab: "businessUnits" as TabType,
+      path: "/dashboard/business-units", // Updated path
     },
   ];
 
@@ -59,45 +98,46 @@ const Sidebar = ({
       initial={{ width: collapsed ? 80 : 200 }}
       animate={{ width: collapsed ? 80 : 200 }}
       transition={{ duration: 0.3 }}
-      className="relative flex flex-col border-r bg-white shadow-sm sm:h-full md:min-h-full  dark:bg-gray-800"
+      className="relative flex flex-col border-r bg-white shadow-sm h-full dark:bg-gray-800"
     >
-      <nav className="flex flex-col justify-center content-center gap-1 px-3 py-2 h-screen">
+      <nav className="flex flex-col items-center justify-center gap-1 px-3 py-2 h-full dark:bg-gray-800">
         {/* Toggle Button */}
-        <div className="relative w-full mb-2">
+        <div className="relative w-full mb-2 flex justify-center">
           <button
             onClick={() => setCollapsed(!collapsed)}
             className={twMerge(
               clsx(
-                "group flex w-full items-center rounded-lg p-3 transition-colors",
-                "hover:bg-gray-100 text-gray-600 dark:text-white dark:hover:bg-gray-100/[0.25]"
+                "group flex items-center rounded-lg p-3 transition-colors",
+                "hover:bg-gray-100 text-gray-600 dark:text-white dark:hover:bg-gray-100/[0.25]",
+                !collapsed && "w-full justify-start"
               )
             )}
           >
             {collapsed ? (
               <ChevronRight className="h-5 w-5" />
             ) : (
-              <ChevronLeft className="h-5 w-5" />
+              <>
+                <ChevronLeft className="h-5 w-5" />
+                <AnimatePresence>
+                  <motion.span
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="ml-3 whitespace-nowrap text-sm font-medium"
+                  >
+                    Menu
+                  </motion.span>
+                </AnimatePresence>
+              </>
             )}
-            <AnimatePresence>
-              {!collapsed && (
-                <motion.span
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  transition={{ duration: 0.2 }}
-                  className="ml-3 whitespace-nowrap text-sm font-medium"
-                >
-                  Menu
-                </motion.span>
-              )}
-            </AnimatePresence>
           </button>
         </div>
 
         {links.map((link) => (
           <div
             key={link.tab}
-            className="relative w-full"
+            className="relative w-full flex justify-center"
             onMouseEnter={() => setHoveredItem(link.tab)}
             onMouseLeave={() => setHoveredItem(null)}
           >
@@ -105,11 +145,12 @@ const Sidebar = ({
               onClick={(e) => handleTabClick(e, link.tab)}
               className={twMerge(
                 clsx(
-                  "group flex w-full items-center rounded-lg p-3 transition-colors",
+                  "group flex items-center rounded-lg p-3 transition-colors",
                   "hover:bg-gray-100 dark:hover:bg-gray-100/[0.25]",
                   activeTab === link.tab
                     ? "bg-blue-50 text-blue-600 dark:bg-gray-100/[0.25]"
-                    : "text-gray-600 dark:text-white"
+                    : "text-gray-600 dark:text-white",
+                  !collapsed && "w-full justify-start"
                 )
               )}
             >

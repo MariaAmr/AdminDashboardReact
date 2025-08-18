@@ -135,6 +135,7 @@ const [previewModal, setPreviewModal] = useState<{
 const [editModal, setEditModal] = useState<{
   show: boolean;
   item?: any;
+  isCreating?: boolean; // flag to clear form
 }>({ show: false });
 
   return (

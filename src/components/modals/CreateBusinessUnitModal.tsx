@@ -13,7 +13,7 @@ export interface BusinessUnit {
 interface CreateBusinessUnitModalProps {
   show: boolean;
   onClose: () => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: (businessUnit: BusinessUnit) => void; // Changed to accept BusinessUnit directly
   businessUnitData: Partial<BusinessUnit>;
   setBusinessUnitData: React.Dispatch<
     React.SetStateAction<Partial<BusinessUnit>>
@@ -38,6 +38,39 @@ const CreateBusinessUnitModal: React.FC<CreateBusinessUnitModalProps> = ({
       [name]: value,
     }));
   };
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Validate required fields
+    if (!businessUnitData.name || !businessUnitData.code) {
+      alert("Please fill in all required fields");
+      return;
+    }
+
+    // Submit complete business unit data
+    onSubmit({
+      id: Math.random().toString(36).substring(2, 9), // Generate ID here or in parent
+      name: businessUnitData.name || "", // Ensure non-null
+      code: businessUnitData.code || "", // Ensure non-null
+      description: businessUnitData.description || "", // Ensure non-null
+    });
+
+    // Clear form after submission
+    setBusinessUnitData({
+      name: "",
+      code: "",
+      description: "",
+    });
+  };
+  const handleCancel = () => {
+    // Clear the form data when canceling
+    setBusinessUnitData({
+      name: "",
+      code: "",
+      description: "",
+    });
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 dark:bg-black/75 pt-16">
@@ -50,7 +83,7 @@ const CreateBusinessUnitModal: React.FC<CreateBusinessUnitModalProps> = ({
             <button
               type="button"
               className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
-              onClick={onClose}
+              onClick={handleCancel}
               aria-label="Close modal"
             >
               <svg
@@ -70,7 +103,7 @@ const CreateBusinessUnitModal: React.FC<CreateBusinessUnitModalProps> = ({
               </svg>
             </button>
           </div>
-          <form className="p-4 md:p-5" onSubmit={onSubmit}>
+          <form className="p-4 md:p-5" onSubmit={handleSubmit}>
             <div className="grid gap-4 mb-4">
               <div>
                 <label
@@ -149,7 +182,7 @@ const CreateBusinessUnitModal: React.FC<CreateBusinessUnitModalProps> = ({
               </button>
               <button
                 type="button"
-                onClick={onClose}
+                onClick={handleCancel}
                 className="text-gray-700 bg-gray-100 hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-gray-600 dark:hover:bg-gray-700 dark:text-white dark:focus:ring-gray-800"
               >
                 Cancel

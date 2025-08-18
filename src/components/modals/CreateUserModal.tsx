@@ -23,7 +23,7 @@ export interface User {
 interface CreateUserModalProps {
   show: boolean;
   onClose: () => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: (userData: Partial<User>) => void;
   userData: Partial<User>;
   setUserData: React.Dispatch<React.SetStateAction<Partial<User>>>;
   isEditing?: boolean;
@@ -37,8 +37,6 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
   setUserData,
   isEditing = false,
 }) => {
-  if (!show) return null;
-
   const roleOptions = [
     { value: "admin", label: "Administrator" },
     { value: "user", label: "User" },
@@ -52,18 +50,52 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
     { value: "PENDING", label: "Pending" },
   ];
 
+ const handleClose = () => {
+   // Reset to default values
+   setUserData({
+     username: "",
+     email: "",
+     firstName: "",
+     lastName: "",
+     roleCode: "",
+     status: "ACTIVE", // Keep default status
+     department: "",
+     phoneNumber: "",
+   });
+   onClose();
+ };
+
+ const handleSubmit = (e: React.FormEvent) => {
+   e.preventDefault();
+   onSubmit(userData);
+   if (!isEditing) {
+     // Clear form after submit for create operations
+     setUserData({
+       username: "",
+       email: "",
+       firstName: "",
+       lastName: "",
+       roleCode: "",
+       status: "ACTIVE",
+       department: "",
+       phoneNumber: "",
+     });
+   }
+ };
+  if (!show) return null;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 pt-6 ">
-      <div className="relative p-14 w-full max-w-2xl max-h-full overflow-y-auto sm:overflow-y-scroll md:overflow-y-auto ">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 pt-6">
+      <div className="relative p-14 w-full max-w-2xl max-h-full overflow-y-auto sm:overflow-y-scroll md:overflow-y-auto">
         <div className="relative bg-white rounded-lg shadow dark:bg-gray-800">
           <div className="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Add New User
+              {isEditing ? "Edit User" : "Add New User"}
             </h3>
             <button
               type="button"
               className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
-              onClick={onClose}
+              onClick={handleClose}
               aria-label="Close modal"
             >
               <svg
@@ -83,15 +115,16 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
               </svg>
             </button>
           </div>
-          <form className="p-4 md:p-5" onSubmit={onSubmit}>
+          <form className="p-4 md:p-5" onSubmit={handleSubmit}>
             <div className="grid gap-4 mb-4 sm:grid-cols-2">
-              {/* Required Fields */}
+              {/* Username */}
               <div>
                 <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-gray-400">
                   Username*
                 </label>
                 <input
                   type="text"
+                  name="username"
                   value={userData.username || ""}
                   onChange={(e) =>
                     setUserData({ ...userData, username: e.target.value })
@@ -101,12 +134,14 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
                 />
               </div>
 
+              {/* Email */}
               <div>
                 <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-gray-400">
                   Email*
                 </label>
                 <input
                   type="email"
+                  name="email"
                   value={userData.email || ""}
                   onChange={(e) =>
                     setUserData({ ...userData, email: e.target.value })
@@ -172,6 +207,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
                   Status*
                 </label>
                 <select
+                  name="status"
                   value={userData.status || "ACTIVE"}
                   onChange={(e) =>
                     setUserData({ ...userData, status: e.target.value })
@@ -243,7 +279,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
               </button>
               <button
                 type="button"
-                onClick={onClose}
+                onClick={handleClose}
                 className="px-4 py-2 bg-gray-300 rounded"
               >
                 Cancel

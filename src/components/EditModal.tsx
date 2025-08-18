@@ -8,6 +8,7 @@ interface EditModalProps {
   onSave: (updatedItem: any) => void;
   type: "users" | "businessUnits" | "activeDirectories";
   onCreateNew?: () => void; // Add this prop for create navigation
+  isCreating?:boolean; //flag
 }
 
 const roleOptions = [
@@ -28,31 +29,72 @@ const EditModal: React.FC<EditModalProps> = ({
   onClose,
   onSave,
   type,
-  onCreateNew,
+  isCreating = false,
 }) => {
-  const [formData, setFormData] = useState(item);
+  const getInitialFormData = () => {
+    switch (type) {
+      case "users":
+        return {
+          username: "",
+          email: "",
+          firstName: "",
+          lastName: "",
+          roleCode: "",
+          status: "ACTIVE",
+          department: "",
+          phoneNumber: "",
+        };
+      case "businessUnits":
+        return { name: "", code: "", description: "" };
+      case "activeDirectories":
+        return { name: "", description: "" };
+      default:
+        return {};
+    }
+  };
 
+  // Initialize formData with default values
+  const [formData, setFormData] = useState(() => {
+    return item ? { ...getInitialFormData(), ...item } : getInitialFormData();
+  });
+
+  // Only update formData when item changes significantly
   useEffect(() => {
-    setFormData(item);
-  }, [item]);
+    if (item) {
+      setFormData((prev) => {
+        // Only update if item has actually changed
+        if (JSON.stringify(item) !== JSON.stringify(prev)) {
+          return { ...getInitialFormData(), ...item };
+        }
+        return prev;
+      });
+    } else {
+      setFormData(getInitialFormData());
+    }
+  }, [item?.id]);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
   ) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(formData);
+    // Clear form after successful save if it's a create operation
+    if (isCreating) {
+      setFormData(getInitialFormData());
+    }
   };
 
   const handleCancel = () => {
-    if (onCreateNew) {
-      onCreateNew(); // Navigate to create user
-    }
-    onClose(); // Close the modal
+    // Clear the form when canceling
+    setFormData(getInitialFormData());
+    onClose();
   };
   const renderFormFields = () => {
     switch (type) {
@@ -281,14 +323,16 @@ const EditModal: React.FC<EditModalProps> = ({
       <div className="bg-white dark:bg-gray-800 rounded-lg p-6 lg:min-w-l  max-w-md relative">
         {/* Close button (X icon) */}
         <button
-          onClick={onClose}
+          onClick={handleCancel}
           className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
           aria-label="Close modal"
         >
           <XMarkIcon className="h-6 w-6" />
         </button>
 
-        <h2 className="text-xl font-bold mb-4 dark:text-white">Edit {type}</h2>
+        <h2 className="text-xl font-bold mb-4 dark:text-white">
+          {isCreating ? `Create New ${type}` : `Edit ${type}`}
+        </h2>
 
         <form onSubmit={handleSubmit}>
           {renderFormFields()}
@@ -297,7 +341,7 @@ const EditModal: React.FC<EditModalProps> = ({
               type="submit"
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
-              Save Changes
+              {isCreating ? "Create" : "Save Changes"}
             </button>
             <button
               type="button"
