@@ -20,16 +20,15 @@ import ForgotPassword from "./forgot-password-page/forgot-password-page";
 import NotFoundPage from "./error/error";
 import { AuthRoute, ProtectedRoute } from "./ProtectedRoute";
 import Dashboard from "./dashboard/dashboard";
+import Contact from "./pages/Contact";
 
 function App() {
   return (
-  
-      <BrowserRouter>
-        <AuthProvider>
-          <AppContent />
-        </AuthProvider>
-      </BrowserRouter>
-   
+    <BrowserRouter>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 
@@ -70,7 +69,6 @@ function AppContent() {
     checkAuth();
   }, [setAuthenticated]);
 
-
   if (initialLoad) {
     return <Loader />;
   }
@@ -97,13 +95,26 @@ function AppContent() {
         </Route>
 
         {/* Protected routes */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<Dashboard />}>
-            <Route index element={null} />
-            <Route path="users" element={null} />
-            <Route path="business-units" element={null} /> {/* Fixed path */}
-            <Route path="active-directories" element={null} />
-          </Route>
+        <Route path="/" element={<ProtectedRoute />}>
+          <Route index element={<Dashboard activeTab={"dashboard"} />} />
+          <Route
+            path="dashboard"
+            element={<Dashboard activeTab={"dashboard"} />}
+          />
+          <Route
+            path="/contact"
+            element={<Dashboard activeTab={"contact"} />}
+          />
+          <Route path="users" element={<Dashboard activeTab={"users"} />} />
+          <Route
+            path="business-units"
+            element={<Dashboard activeTab={"businessUnits"} />}
+          />
+          {/* Fixed path */}
+          <Route
+            path="active-directories"
+            element={<Dashboard activeTab={"activeDirectories"} />}
+          />
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />

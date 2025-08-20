@@ -7,32 +7,15 @@ import activeDirectoryData from "../activeDirectoryData.json";
 import Sidebar, { type TabType } from "../components/Sidebar";
 import Navbar from "../Navbar/Navbar";
 import Footer from "../Footer/Footer";
-import CreateUserModal from "../components/modals/CreateUserModal";
+import CreateUserModal, { type User } from "../components/modals/CreateUserModal";
 import CreateBusinessUnitModal from "../components/modals/CreateBusinessUnitModal";
 import CreateActiveDirectoryModal from "../components/modals/CreateActiveDirectoryModal";
 import Pagination from "../components/Pagination";
 import EditModal from "../components/EditModal";
 import { motion } from "framer-motion";
-
 import { useNavigate } from "react-router-dom";
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  password?: string;
-  provider?: string | null;
-  roleCode: string;
-  businessUnitId?: string | null;
-  status: string;
-  firstName: string;
-  lastName: string;
-  department: string;
-  phoneNumber?: string;
-  createdById?: string;
-  createdOn?: string;
-  modifiedOn?: string;
-  modifiedById?: string;
-}
+import Contact from "../pages/Contact";
+
 
 interface BusinessUnit {
   id: string;
@@ -46,10 +29,23 @@ export interface ActiveDirectory {
   name: string;
   description?: string;
 }
+export interface DashboardCard {
+  title: string;
+  description: string;
+  path: string;
+  initial: { opacity: number; x?: number; y?: number };
+  delay: number;
+  targetTab: TabType; // This links to your TabType
+}
 
-const Dashboard: React.FC = () => {
+export interface DashboardProps {
+  activeTab: TabType ;
+}
+
+
+const Dashboard: React.FC<DashboardProps> = ({activeTab}) => {
   const [collapsed, setCollapsed] = useState(true);
-  const [activeTab, setActiveTab] = useState<TabType>("dashboard");
+  // const [activeTab, setActiveTab] = useState<TabType>("dashboard");
 
   // Data states
   const [users, setUsers] = useState<User[]>(() => {
@@ -155,23 +151,23 @@ const Dashboard: React.FC = () => {
     const currentPage = currentPages[activeTab] || 1;
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
-
+    
     return {
       paginatedData: data.slice(startIndex, endIndex),
       totalItems: data.length,
     };
   }, [currentData, currentPages, activeTab, itemsPerPage]);
+    const handlePageChange = (page: number) => {
+      setCurrentPages((prev) => ({
+        ...prev,
+        [activeTab]: page,
+      }));
+    };
+    const [sortConfig, setSortConfig] = useState<{
+      key: string;
+      direction: "asc" | "desc";
+    }>({ key: "username", direction: "asc" });
 
-  const handlePageChange = (page: number) => {
-    setCurrentPages((prev) => ({
-      ...prev,
-      [activeTab]: page,
-    }));
-  };
-  const [sortConfig, setSortConfig] = useState<{
-    key: string;
-    direction: "asc" | "desc";
-  }>({ key: "username", direction: "asc" });
 
   const tableConfig = useMemo(() => {
     switch (activeTab) {
@@ -239,7 +235,8 @@ const Dashboard: React.FC = () => {
   }, [activeTab]);
 
   const handleTabChange = (tab: TabType) => {
-    setActiveTab(tab);
+    // setActiveTab(tab);
+    return tab;
   };
   const handleAddItem = () => {
     // Reset create form data when opening create modal
@@ -263,14 +260,33 @@ const Dashboard: React.FC = () => {
     }));
     setCurrentPages((prev) => ({ ...prev, [activeTab]: 1 })); // Reset to page 1
   };
-  const handleCreateUser = (userData: Partial<User>) => {
-    const newId = Math.random().toString(36).substring(2, 9);
-    setUsers([...users, { ...userData, id: newId } as User]);
-    setShowCreateModal(false);
-    setNewUser({ status: "ACTIVE" });
-    setCurrentPages((prev) => ({ ...prev, users: 1 }));
-  };
+const handleCreateUser = (userData: Partial<User>) => {
+  const newId = Math.random().toString(36).substring(2, 9);
+  const currentTimestamp = new Date().toISOString();
 
+  // Validate and ensure status is always valid
+  const validStatuses = ["ACTIVE", "INACTIVE", "PENDING"];
+  const userStatus = validStatuses.includes(userData.status?.toString() || "")
+    ? userData.status
+    : "ACTIVE";
+
+  setUsers([
+    ...users,
+    {
+      ...userData,
+      id: newId,
+      status: userStatus, // Use validated status
+      createdAt: currentTimestamp,
+      modifiedAt: currentTimestamp,
+      createdById: "system",
+      modifiedById: "system",
+    } as User,
+  ]);
+
+  setShowCreateModal(false);
+  setNewUser({ status: "ACTIVE" });
+  setCurrentPages((prev) => ({ ...prev, users: 1 }));
+};
   const handleCreateBusinessUnit = (businessUnit: BusinessUnit) => {
     setBusinessUnits([...businessUnits, businessUnit]);
     setShowCreateModal(false);
@@ -281,52 +297,55 @@ const Dashboard: React.FC = () => {
     setShowCreateModal(false);
     setNewActiveDirectory({});
   };
-  const renderCreateModal = () => {
-    switch (activeTab) {
-      case "users":
-        return (
-          <CreateUserModal
-            show={showCreateModal}
-            onClose={() => {
-              setShowCreateModal(false);
-              setNewUser({ status: "ACTIVE" });
-            }}
-            onSubmit={handleCreateUser}
-            userData={newUser}
-            setUserData={setNewUser}
-            isEditing={false}
-          />
-        );
-      case "businessUnits":
-        return (
-          <CreateBusinessUnitModal
-            show={showCreateModal}
-            onClose={() => {
-              setShowCreateModal(false);
-              setNewBusinessUnit({});
-            }}
-            onSubmit={handleCreateBusinessUnit}
-            businessUnitData={newBusinessUnit}
-            setBusinessUnitData={setNewBusinessUnit}
-          />
-        );
-      case "activeDirectories":
-        return (
-          <CreateActiveDirectoryModal
-            show={showCreateModal}
-            onClose={() => {
-              setShowCreateModal(false);
-              setNewActiveDirectory({});
-            }}
-            onSubmit={handleCreateActiveDirectory}
-            activeDirectoryData={newActiveDirectory}
-            setActiveDirectoryData={setNewActiveDirectory}
-          />
-        );
-      default:
-        return null;
-    }
-  };
+const renderCreateModal = () => {
+  switch (activeTab) {
+    case "users":
+      return (
+        <CreateUserModal
+          show={showCreateModal}
+          onClose={() => {
+            setShowCreateModal(false);
+            setNewUser({ status: "ACTIVE" });
+          }}
+          onSubmit={handleCreateUser}
+          userData={newUser}
+          setUserData={setNewUser}
+          isEditing={false}
+          
+          businessUnits={businessUnits} // Add this prop
+          activeDirectories={activeDirectories} // Add this prop
+        />
+      );
+    case "businessUnits":
+      return (
+        <CreateBusinessUnitModal
+          show={showCreateModal}
+          onClose={() => {
+            setShowCreateModal(false);
+            setNewBusinessUnit({});
+          }}
+          onSubmit={handleCreateBusinessUnit}
+          businessUnitData={newBusinessUnit}
+          setBusinessUnitData={setNewBusinessUnit}
+        />
+      );
+    case "activeDirectories":
+      return (
+        <CreateActiveDirectoryModal
+          show={showCreateModal}
+          onClose={() => {
+            setShowCreateModal(false);
+            setNewActiveDirectory({});
+          }}
+          onSubmit={handleCreateActiveDirectory}
+          activeDirectoryData={newActiveDirectory}
+          setActiveDirectoryData={setNewActiveDirectory}
+        />
+      );
+    default:
+      return null;
+  }
+};
   const renderEditModal = () => {
     if (!editingItem) return null;
 
@@ -342,6 +361,8 @@ const Dashboard: React.FC = () => {
             onSave={handleUpdate}
             type={activeTab}
             isEditing={true}
+            businessUnits={businessUnits}
+            activeDirectories={activeDirectories}
           />
         );
       case "businessUnits":
@@ -409,67 +430,77 @@ const Dashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
 
-  useEffect(() => {
-    const path = location.pathname;
-    if (path.endsWith("/users")) setActiveTab("users");
-    else if (path.endsWith("/business-units")) setActiveTab("businessUnits");
-    else if (path.endsWith("/active-directories"))
-      setActiveTab("activeDirectories");
-    else setActiveTab("dashboard");
-  }, [location.pathname]);
-   const handleCardClick = (path: string) => {
-     navigate(path);
-   };
+  // useEffect(() => {
+  //   const path = location.pathname;
+  //   if (path.endsWith("/users")) setActiveTab("users");
+  //   else if (path.endsWith("/business-units")) setActiveTab("businessUnits");
+  //   else if (path.endsWith("/active-directories"))
+  //     setActiveTab("activeDirectories");
+  //   else setActiveTab("dashboard");
+  // }, [location.pathname]);
+    const handleCardClick = (targetTab: TabType) => {
+      // Map TabType to actual paths
+      const pathMap: Record<TabType, string> = {
+        dashboard: "/dashboard",
+        users: "/users",
+        businessUnits: "/business-units",
+        activeDirectories: "/active-directories",
+      };
+      navigate(pathMap[targetTab]);
+    };
 
-  const dashboardCards = [
-    {
-      title: "Users Management",
-      description: "View and manage all system users.",
-      path: "/dashboard/users",
-      initial: { opacity: 0, x: -50 },
-      delay: 0.2,
-    },
-    {
-      title: "Business Units",
-      description: "Manage organizational units.",
-      path: "/dashboard/business-units",
-      initial: { opacity: 0, y: 50 },
-      delay: 0.3,
-    },
-    {
-      title: "Active Directories",
-      description: "Configure directory integrations.",
-      path: "/dashboard/active-directories",
-      initial: { opacity: 0, x: 50 },
-      delay: 0.4,
-    },
-  ];
+    const dashboardCards: DashboardCard[] = [
+      {
+        title: "Users Management",
+        description: "View and manage all system users.",
+        path: "/users",
+        targetTab: "users",
+        initial: { opacity: 0, x: -50 },
+        delay: 0.2,
+      },
+      {
+        title: "Business Units",
+        description: "Manage organizational units.",
+        path: "/business-units",
+        targetTab: "businessUnits",
+        initial: { opacity: 0, y: 50 },
+        delay: 0.3,
+      },
+      {
+        title: "Active Directories",
+        description: "Configure directory integrations.",
+        path: "/active-directories",
+        targetTab: "activeDirectories",
+        initial: { opacity: 0, x: 50 },
+        delay: 0.4,
+      },
+    ];
   return (
     <>
       <Navbar />
-      <div className="flex h-[calc(100vh-4.5rem)]">
+      <div className="flex h-[calc(100vh-11rem)] sm:h-[calc(100vh-4.5rem)] lg:h-[calc(100vh-11rem)]">
         <Sidebar
           collapsed={collapsed}
           setCollapsed={setCollapsed}
           onTabChange={handleTabChange}
-          activeTab={activeTab}
+          activeTab={activeTab || "dashboard"}
         />
         <main
           className="bg-gray-50 dark:bg-gray-900 mt-18 sm:p-5 antialiased 
             w-full mx-auto 
             px-4 sm:px-6 md:px-8 lg:px-10 
             py-4 sm:py-4 md:py-8 lg:pt-4
-            overflow-x-hidden"
+            overflow-x-hidden lg:overflow-y-auto "
         >
           <div
             className="bg-white dark:bg-gray-800 relative shadow-md rounded-lg 
               w-full mx-auto 
               px-4 sm:px-6 md:px-8 lg:px-8 
               py-4 sm:py-6 md:py-8 lg:py-8
-              max-w-screen-sm sm:max-w-screen-md md:max-w-screen-lg lg:max-w-screen-xl xl:max-w-screen-2xl"
+              max-w-screen-sm sm:max-w-screen-md md:max-w-screen-lg lg:max-w-screen-xl xl:max-w-screen-2xl  "
           >
             {activeTab === "dashboard" ? (
-              <div className="py-20 flex flex-col items-center">
+              <div className="py-18 flex flex-col items-center justify-center">
                 <div className="text-center py-10 animate-fade-in w-full">
                   <motion.div
                     initial={{ opacity: 0, y: -20 }}
@@ -493,7 +524,7 @@ const Dashboard: React.FC = () => {
                         initial={card.initial}
                         animate={{ opacity: 1, x: 0, y: 0 }}
                         transition={{ duration: 0.5, delay: card.delay }}
-                        onClick={() => handleCardClick(card.path)}
+                        onClick={() => handleCardClick(card.targetTab)}
                         className="cursor-pointer min-w-0"
                       >
                         <div className="h-full transition-all hover:shadow-lg dark:hover:bg-gray-700/50">
@@ -528,6 +559,8 @@ const Dashboard: React.FC = () => {
                   </div>
                 </div>
               </div>
+            ) : activeTab === "contact" ? (
+             <Contact/>
             ) : (
               <DataTable
                 data={paginatedData}
@@ -548,9 +581,11 @@ const Dashboard: React.FC = () => {
                 onEdit={handleEdit}
                 searchTerm={searchTerm}
                 onSearchChange={setSearchTerm}
+                businessUnits={businessUnits}
+                activeDirectories={activeDirectories}
               />
             )}
-            {activeTab !== "dashboard" && (
+            {activeTab !== "dashboard" && activeTab !== "contact" && (
               <Pagination
                 currentPage={currentPages[activeTab]}
                 totalPages={Math.ceil(totalItems / itemsPerPage)}
@@ -574,6 +609,7 @@ const Dashboard: React.FC = () => {
       <Footer />
     </>
   );
+  
 };
 
 export default Dashboard;

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { MoonIcon, SunIcon, Bars3Icon } from "@heroicons/react/24/outline";
 import { useAuth } from "../auth/userAuth";
 import { logout } from "../auth/auth";
@@ -8,13 +8,24 @@ export default function Navbar() {
   const [toggleMenu, setToggleMenu] = useState(false);
   const [toggleDropdown, setToggleDropdown] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [activeItem, setActiveItem] = useState("/");
   const { isAuthenticated, username, setAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Update active item based on current path
+  useEffect(() => {
+    // If we're on the dashboard, set Home as active
+    if (location.pathname === "/dashboard") {
+      setActiveItem("/");
+    } else {
+      setActiveItem(location.pathname);
+    }
+  }, [location.pathname]);
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
     document.documentElement.classList.toggle("dark", !darkMode);
-   
   };
 
   const handleSignOut = async () => {
@@ -26,15 +37,11 @@ export default function Navbar() {
   };
 
   const menuItems = [
-    { name: "Home", path: "/", current: true },
+    { name: "Home", path: "/" },
     { name: "Contact Us", path: "/contact" },
   ];
 
   const dropdownItems = [{ name: "Sign out", onClick: handleSignOut }];
-
-  // useEffect(() => {
-  //   console.log("Auth context changed:", { isAuthenticated, username });
-  // }, [isAuthenticated, username]);
 
   return (
     <nav className="bg-white dark:bg-gray-900 dark:border dark:border-b-gray-800/[0.25] fixed top-0 left-0 right-0 z-50">
@@ -93,12 +100,13 @@ export default function Navbar() {
               <li key={item.name}>
                 <Link
                   to={item.path}
-                  className={`block py-2 px-3 rounded hover:text-blue-700 dark:hover:text-blue-500 ${
-                    item.current
-                      ? "md:text-blue-700 md:dark:text-blue-500 text-gray-900 dark:text-white"
-                      : "text-gray-900 dark:text-white"
+                  className={`block py-2 px-3 rounded transition-colors duration-200 ${
+                    activeItem === item.path
+                      ? "text-blue-700 dark:text-blue-500 font-medium"
+                      : "text-gray-900 hover:text-blue-700 dark:text-white dark:hover:text-blue-500"
                   }`}
-                  aria-current={item.current ? "page" : undefined}
+                  onClick={() => setActiveItem(item.path)}
+                  aria-current={activeItem === item.path ? "page" : undefined}
                 >
                   {item.name}
                 </Link>
@@ -180,7 +188,7 @@ export default function Navbar() {
         >
           <ul className="flex flex-col font-medium px-4 py-2 mt-2 rounded-lg bg-gray-50 dark:bg-gray-800">
             {isAuthenticated && (
-              <li className="py-2  text-xl bg-gradient-to-r from-blue-300 via-violet-600 to-sky-900 bg-clip-text text-transparent">
+              <li className="py-2 text-xl bg-gradient-to-r from-blue-300 via-violet-600 to-sky-900 bg-clip-text text-transparent">
                 Hello, {username}
               </li>
             )}
@@ -188,8 +196,15 @@ export default function Navbar() {
               <li key={item.name}>
                 <Link
                   to={item.path}
-                  className="block py-2 px-3 text-gray-900 rounded hover:text-blue-700/[0.50] dark:text-white dark:hover:text-blue-500"
-                  onClick={() => setToggleMenu(false)}
+                  className={`block py-2 px-3 rounded transition-colors duration-200 ${
+                    activeItem === item.path
+                      ? "text-blue-700 dark:text-blue-500 font-medium"
+                      : "text-gray-900 hover:text-blue-700/[0.50] dark:text-white dark:hover:text-blue-500"
+                  }`}
+                  onClick={() => {
+                    setActiveItem(item.path);
+                    setToggleMenu(false);
+                  }}
                 >
                   {item.name}
                 </Link>

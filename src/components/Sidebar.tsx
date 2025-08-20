@@ -1,3 +1,4 @@
+// sidebar.tsx
 "use client";
 import {
   LayoutDashboard,
@@ -6,6 +7,7 @@ import {
   Building2,
   ChevronLeft,
   ChevronRight,
+  type LucideProps,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
@@ -17,13 +19,21 @@ export type TabType =
   | "dashboard"
   | "users"
   | "businessUnits"
-  | "activeDirectories";
+  | "activeDirectories"
+  | "contact";
 
 interface SidebarProps {
   collapsed: boolean;
   setCollapsed: (collapsed: boolean) => void;
   onTabChange: (tab: TabType) => void;
   activeTab: TabType;
+}
+
+interface SidebarLink {
+  icon: React.ComponentType<Omit<LucideProps, "ref"> & React.RefAttributes<SVGSVGElement>>;
+  label: string;
+  tab: TabType;
+  path: string;
 }
 
 const Sidebar = ({
@@ -36,11 +46,12 @@ const Sidebar = ({
   const navigate = useNavigate();
 
   const getPageTitle = (tab: TabType) => {
-    const titles = {
+    const titles: Record<TabType, string> = {
       dashboard: "Dashboard Overview",
       users: "User Management",
       businessUnits: "Business Units",
       activeDirectories: "Active Directories",
+      contact: "Contact Us"
     };
     return `${titles[tab]}`;
   };
@@ -50,15 +61,16 @@ const Sidebar = ({
     e.stopPropagation();
     onTabChange(tab);
 
-    // Updated to use path-based navigation
-    const pathMap = {
+    // Use the same path mapping as Dashboard component
+    const pathMap: Record<TabType, string> = {
       dashboard: "/dashboard",
-      users: "/dashboard/users",
-      businessUnits: "/dashboard/business-units",
-      activeDirectories: "/dashboard/active-directories", // Added this line
+      users: "/users",
+      businessUnits: "/business-units",
+      activeDirectories: "/active-directories",
+      contact: "/contact"
     };
 
-    navigate(pathMap[tab], { replace: true });
+    navigate(pathMap[tab]);
     document.title = getPageTitle(tab);
   };
 
@@ -66,7 +78,7 @@ const Sidebar = ({
     document.title = getPageTitle(activeTab);
   }, [activeTab]);
 
-  const links = [
+  const sidebarLinks: SidebarLink[] = [
     {
       icon: LayoutDashboard,
       label: "Dashboard",
@@ -77,19 +89,19 @@ const Sidebar = ({
       icon: Users,
       label: "Users",
       tab: "users" as TabType,
-      path: "/dashboard/users", // Updated path
-    },
-    {
-      icon: KeySquare,
-      label: "Active Directory",
-      tab: "activeDirectories" as TabType,
-      path: "/dashboard/active-directories", // Updated path
+      path: "/users", // Direct path
     },
     {
       icon: Building2,
-      label: "Business Unit",
+      label: "Business Units",
       tab: "businessUnits" as TabType,
-      path: "/dashboard/business-units", // Updated path
+      path: "/business-units", // Direct path
+    },
+    {
+      icon: KeySquare,
+      label: "Active Directories",
+      tab: "activeDirectories" as TabType,
+      path: "/active-directories", // Direct path
     },
   ];
 
@@ -134,7 +146,7 @@ const Sidebar = ({
           </button>
         </div>
 
-        {links.map((link) => (
+        {sidebarLinks.map((link) => (
           <div
             key={link.tab}
             className="relative w-full flex justify-center"

@@ -29,11 +29,11 @@ const socialLinks = [
 ];
 export default function Footer() {
   return (
-    <footer className="relative z-10 bg-white  dark:bg-gray-900 dark:border dark:border-t-gray-700/[0.25]">
-      <div className="flex flex-col items-center p-4">
+    <footer className="fixed left-0 right-0 bottom-0 z-10 bg-white  dark:bg-gray-900 dark:border dark:border-t-gray-700/[0.25]">
+      <div className="flex flex-col items-center">
         {/* social links */}
         <div className="mt-3">
-          <span className="mb-4 block text-center text-lg font-medium text-[#767E94]">
+          <span className="mb-4 block text-center md:text-lg font-medium text-[#767E94]">
             Follow Us
           </span>
           <ul className="flex items-center gap-6">

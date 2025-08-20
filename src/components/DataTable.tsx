@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import TableControls from "./TableControls";
 import TableContent from "./TableContent";
 import Pagination from "./Pagination";
+import type { ActiveDirectory, BusinessUnit } from "./modals/CreateUserModal";
 interface Column {
   key: string;
   label: string;
@@ -40,6 +41,8 @@ interface DataTableProps {
   onError?: (error: string | null) => void;
   onResetSort?: () => void;
   onEdit?: (item: any) => void;
+    businessUnits?: BusinessUnit[];
+    activeDirectories?: ActiveDirectory[];
 }
 
 const DataTable: React.FC<DataTableProps> = ({
@@ -64,6 +67,8 @@ const DataTable: React.FC<DataTableProps> = ({
   error = null,
   onError,
   onEdit,
+  businessUnits = [], // Add default value
+  activeDirectories = [],
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -227,6 +232,8 @@ const DataTable: React.FC<DataTableProps> = ({
             onEdit={onEdit}
             searchTerm={searchTerm} // Make sure this is passed
             onSearchChange={onSearchChange}
+            businessUnits={businessUnits} // Pass the data
+            activeDirectories={activeDirectories} // Pass the data
           />
 
           {!isLoading && totalPages > 1 && (
@@ -236,6 +243,7 @@ const DataTable: React.FC<DataTableProps> = ({
               onPageChange={handlePageChange}
               itemsPerPage={itemsPerPage}
               totalItems={filteredData.length}
+              entityType={"businessUnits"}
             />
           )}
         </>

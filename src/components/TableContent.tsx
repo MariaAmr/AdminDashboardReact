@@ -2,13 +2,13 @@ import React, { useState } from "react";
 import PreviewModal from "./modals/PreviewModal";
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
 import EditModal from "./EditModal";
+import type { ActiveDirectory, BusinessUnit } from "./modals/CreateUserModal";
 interface Column {
   key: string;
   label: string;
   hidden?: boolean;
   breakpoint?: "sm" | "md" | "lg";
   sortable?: boolean;
-  // Add type information for proper sorting
   sortType?: "string" | "number" | "date" | "boolean";
 }
 
@@ -32,6 +32,8 @@ interface TableContentProps {
   onSelectAll?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onEdit?: (item: TableItem) => void;
   activeTab?: string; // Add this
+  businessUnits?: BusinessUnit[];
+  activeDirectories?: ActiveDirectory[];
 }
 
 const TableContent: React.FC<TableContentProps> = ({
@@ -41,12 +43,15 @@ const TableContent: React.FC<TableContentProps> = ({
   onSort,
   onDelete,
   onBulkDelete,
-  selectedItems = [],
-  onSelectItem,
-  onSelectAll,
+  // selectedItems = [],
+  // onSelectItem,
+  // onSelectAll,
   onEdit,
   activeTab,
+  businessUnits = [], // Add default value
+  activeDirectories = [],
 }) => {
+ 
   const [deleteModal, setDeleteModal] = useState<{
     show: boolean;
     itemId?: string;
@@ -58,11 +63,11 @@ const TableContent: React.FC<TableContentProps> = ({
     setDeleteModal({ show: true, itemId, itemName });
   };
 
-  const handleBulkDeleteClick = () => {
-    if (selectedItems.length > 0) {
-      setDeleteModal({ show: true, isBulk: true });
-    }
-  };
+  // const handleBulkDeleteClick = () => {
+  //   if (selectedItems.length > 0) {
+  //     setDeleteModal({ show: true, isBulk: true });
+  //   }
+  // };
 
   const confirmDelete = () => {
     if (deleteModal.isBulk && onBulkDelete) {
@@ -126,17 +131,17 @@ const TableContent: React.FC<TableContentProps> = ({
       </svg>
     );
   };
-const [previewModal, setPreviewModal] = useState<{
-  show: boolean;
-  item?: any;
-}>({ show: false });
+  const [previewModal, setPreviewModal] = useState<{
+    show: boolean;
+    item?: any;
+  }>({ show: false });
 
-// Add this state for edit modal
-const [editModal, setEditModal] = useState<{
-  show: boolean;
-  item?: any;
-  isCreating?: boolean; // flag to clear form
-}>({ show: false });
+  // Add this state for edit modal
+  const [editModal, setEditModal] = useState<{
+    show: boolean;
+    item?: any;
+    isCreating?: boolean; // flag to clear form
+  }>({ show: false });
 
   return (
     <>
@@ -179,8 +184,6 @@ const [editModal, setEditModal] = useState<{
                               className={`px-2 py-2 text-xs font-medium rounded-full ${
                                 displayValue === "ACTIVE"
                                   ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                                  : displayValue === "PENDING"
-                                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
                                   : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                               }`}
                             >
@@ -407,6 +410,8 @@ const [editModal, setEditModal] = useState<{
               setPreviewModal({ show: false });
               setEditModal({ show: true, item });
             }}
+            businessUnits={businessUnits} // Pass the data
+            activeDirectories={activeDirectories} // Pass the data
           />
         )}
         {editModal.show && (
@@ -421,6 +426,8 @@ const [editModal, setEditModal] = useState<{
               setEditModal({ show: false });
             }}
             type={activeTab as "users" | "businessUnits" | "activeDirectories"}
+            businessUnits={businessUnits}
+            activeDirectories={activeDirectories}
           />
         )}
       </div>

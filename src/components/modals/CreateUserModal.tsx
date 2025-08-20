@@ -20,6 +20,19 @@ export interface User {
   modifiedById?: string;
 }
 
+export interface BusinessUnit {
+  id: string;
+  name: string;
+  code: string;
+  description?: string;
+}
+
+export interface ActiveDirectory {
+  id: string;
+  name: string;
+  description?: string;
+}
+
 interface CreateUserModalProps {
   show: boolean;
   onClose: () => void;
@@ -27,6 +40,8 @@ interface CreateUserModalProps {
   userData: Partial<User>;
   setUserData: React.Dispatch<React.SetStateAction<Partial<User>>>;
   isEditing?: boolean;
+  businessUnits: BusinessUnit[]; // Add businessUnits prop
+  activeDirectories: ActiveDirectory[]; // Add activeDirectories prop
 }
 
 const CreateUserModal: React.FC<CreateUserModalProps> = ({
@@ -36,6 +51,8 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
   userData,
   setUserData,
   isEditing = false,
+  businessUnits = [], // Default to empty array
+  activeDirectories = [], // Default to empty array
 }) => {
   const roleOptions = [
     { value: "admin", label: "Administrator" },
@@ -46,42 +63,36 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
 
   const statusOptions = [
     { value: "ACTIVE", label: "Active" },
-    { value: "INACTIVE", label: "Inactive" },
-    { value: "PENDING", label: "Pending" },
+  
+   
   ];
 
- const handleClose = () => {
-   // Reset to default values
-   setUserData({
-     username: "",
-     email: "",
-     firstName: "",
-     lastName: "",
-     roleCode: "",
-     status: "ACTIVE", // Keep default status
-     department: "",
-     phoneNumber: "",
-   });
-   onClose();
- };
+  const handleClose = () => {
+    // Reset to default values
+    setUserData({
+      username: "",
+      email: "",
+      firstName: "",
+      lastName: "",
+      roleCode: "",
+      status: "ACTIVE", // Keep default status
+      department: "",
+      phoneNumber: "",
+      businessUnitId: "",
+      activeDirectoryId: "",
+    });
+    onClose();
+  };
 
- const handleSubmit = (e: React.FormEvent) => {
-   e.preventDefault();
-   onSubmit(userData);
-   if (!isEditing) {
-     // Clear form after submit for create operations
-     setUserData({
-       username: "",
-       email: "",
-       firstName: "",
-       lastName: "",
-       roleCode: "",
-       status: "ACTIVE",
-       department: "",
-       phoneNumber: "",
-     });
-   }
- };
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(userData);
+    if (!isEditing) {
+      // Clear form after submit for create operations
+      setUserData({ status: "ACTIVE" } as User);
+    }
+  };
+
   if (!show) return null;
 
   return (
@@ -204,13 +215,13 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
 
               <div>
                 <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-gray-400">
-                  Status*
+                  Status
                 </label>
                 <select
                   name="status"
-                  value={userData.status || "ACTIVE"}
+                  value={userData.status || "ACTIVE"} // Good - defaults to "ACTIVE"
                   onChange={(e) =>
-                    setUserData({ ...userData, status: e.target.value })
+                    setUserData({ ...userData, status: e.target.value || "ACTIVE" })
                   }
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                   required
@@ -251,36 +262,68 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                 />
               </div>
+
+              {/* Business Unit Dropdown */}
+              <div>
+                <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-gray-400">
+                  Business Unit
+                </label>
+                <select
+                  value={userData.businessUnitId || ""}
+                  onChange={(e) =>
+                    setUserData({
+                      ...userData,
+                      businessUnitId: e.target.value || null,
+                    })
+                  }
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                >
+                  <option value="">Select Business Unit</option>
+                  {businessUnits.map((unit) => (
+                    <option key={unit.id} value={unit.id}>
+                      {unit.name} {unit.code && `(${unit.code})`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Active Directory Dropdown */}
+              <div>
+                <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-gray-400">
+                  Active Directory
+                </label>
+                <select
+                  value={userData.activeDirectoryId || ""}
+                  onChange={(e) =>
+                    setUserData({
+                      ...userData,
+                      activeDirectoryId: e.target.value || null,
+                    })
+                  }
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                >
+                  <option value="">Select Active Directory</option>
+                  {activeDirectories.map((directory) => (
+                    <option key={directory.id} value={directory.id}>
+                      {directory.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-            {/* <button
-              type="submit"
-              className="text-white inline-flex items-center bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
-            >
-              <svg
-                className="me-1 -ms-1 w-5 h-5"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Add User
-            </button> */}
-            {/* Add other fields similarly */}
-            <div className="flex justify-start space-x-4">
+
+            {/* Submit buttons */}
+            <div className="flex justify-start space-x-3">
               <button
                 type="submit"
-                className="px-4 py-2 bg-primary-700 hover:bg-primary-800 focus:ring-4 text-white rounded"
+                className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
               >
-                {isEditing ? "Update" : "Create"}
+                {isEditing ? "Update User" : "Create User"}
               </button>
               <button
                 type="button"
                 onClick={handleClose}
-                className="px-4 py-2 bg-gray-300 rounded"
+                className="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600"
               >
                 Cancel
               </button>

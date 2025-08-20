@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
-
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import type { ActiveDirectory, BusinessUnit } from "./CreateUserModal";
 
 interface EditModalProps {
   item: any;
   onClose: () => void;
   onSave: (updatedItem: any) => void;
   type: "users" | "businessUnits" | "activeDirectories";
-  onCreateNew?: () => void; // Add this prop for create navigation
-  isCreating?:boolean; //flag
+  isCreating?: boolean;
+  businessUnits?: BusinessUnit[]; // Add business units prop
+  activeDirectories?: ActiveDirectory[]; // Add active directories prop
 }
 
 const roleOptions = [
@@ -30,6 +31,8 @@ const EditModal: React.FC<EditModalProps> = ({
   onSave,
   type,
   isCreating = false,
+  businessUnits = [], // Default empty array
+  activeDirectories = [], // Default empty array
 }) => {
   const getInitialFormData = () => {
     switch (type) {
@@ -43,6 +46,8 @@ const EditModal: React.FC<EditModalProps> = ({
           status: "ACTIVE",
           department: "",
           phoneNumber: "",
+          businessUnitId: "",
+          activeDirectoryId: "",
         };
       case "businessUnits":
         return { name: "", code: "", description: "" };
@@ -53,16 +58,13 @@ const EditModal: React.FC<EditModalProps> = ({
     }
   };
 
-  // Initialize formData with default values
   const [formData, setFormData] = useState(() => {
     return item ? { ...getInitialFormData(), ...item } : getInitialFormData();
   });
 
-  // Only update formData when item changes significantly
   useEffect(() => {
     if (item) {
       setFormData((prev) => {
-        // Only update if item has actually changed
         if (JSON.stringify(item) !== JSON.stringify(prev)) {
           return { ...getInitialFormData(), ...item };
         }
@@ -85,22 +87,28 @@ const EditModal: React.FC<EditModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(formData);
-    // Clear form after successful save if it's a create operation
     if (isCreating) {
       setFormData(getInitialFormData());
     }
   };
 
   const handleCancel = () => {
-    // Clear the form when canceling
     setFormData(getInitialFormData());
     onClose();
   };
+
+  // Get the display label for the current role
+  const getCurrentRoleLabel = () => {
+    if (!formData.roleCode) return "Select a role";
+    const role = roleOptions.find((opt) => opt.value === formData.roleCode);
+    return role ? role.label : formData.roleCode;
+  };
+
   const renderFormFields = () => {
     switch (type) {
       case "users":
         return (
-          <div className="space-y-4  ">
+          <div className="space-y-4">
             <form>
               <div className="grid gap-4 mb-4 sm:grid-cols-2">
                 {/* Username */}
@@ -113,14 +121,14 @@ const EditModal: React.FC<EditModalProps> = ({
                     name="username"
                     value={formData.username || ""}
                     onChange={handleChange}
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600  w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     required
                   />
                 </div>
 
                 {/* Email */}
                 <div>
-                  <label className=" mb-2 text-sm font-medium text-gray-900 dark:text-gray-400">
+                  <label className="mb-2 text-sm font-medium text-gray-900 dark:text-gray-400">
                     Email*
                   </label>
                   <input
@@ -128,14 +136,14 @@ const EditModal: React.FC<EditModalProps> = ({
                     name="email"
                     value={formData.email || ""}
                     onChange={handleChange}
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600  w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     required
                   />
                 </div>
 
                 {/* Personal Information */}
                 <div>
-                  <label className=" mb-2 text-sm font-medium text-gray-900 dark:text-gray-400">
+                  <label className="mb-2 text-sm font-medium text-gray-900 dark:text-gray-400">
                     First Name
                   </label>
                   <input
@@ -143,12 +151,12 @@ const EditModal: React.FC<EditModalProps> = ({
                     name="firstName"
                     value={formData.firstName || ""}
                     onChange={handleChange}
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600  w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                   />
                 </div>
 
                 <div>
-                  <label className=" mb-2 text-sm font-medium text-gray-900 dark:text-gray-400">
+                  <label className="mb-2 text-sm font-medium text-gray-900 dark:text-gray-400">
                     Last Name
                   </label>
                   <input
@@ -156,18 +164,21 @@ const EditModal: React.FC<EditModalProps> = ({
                     name="lastName"
                     value={formData.lastName || ""}
                     onChange={handleChange}
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600  w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                   />
                 </div>
 
                 {/* Role and Status */}
                 <div>
-                  <label className=" mb-2 text-sm font-medium text-gray-900 dark:text-gray-400">
-                    Role*
+                  <label className="mb-2 text-sm font-medium text-gray-900 dark:text-gray-400">
+                    Role*{" "}
+                    <span className="text-sm text-blue-500">
+                      ({getCurrentRoleLabel()})
+                    </span>
                   </label>
                   <select
                     name="roleCode"
-                    value={formData.roleCode || ""}
+                    value={formData.roleCode || getCurrentRoleLabel()}
                     onChange={handleChange}
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     required
@@ -182,8 +193,8 @@ const EditModal: React.FC<EditModalProps> = ({
                 </div>
 
                 <div>
-                  <label className=" mb-2 text-sm font-medium text-gray-900 dark:text-gray-400">
-                    Status*
+                  <label className="mb-2 text-sm font-medium text-gray-900 dark:text-gray-400">
+                    Status
                   </label>
                   <select
                     name="status"
@@ -202,7 +213,7 @@ const EditModal: React.FC<EditModalProps> = ({
 
                 {/* Department and Contact */}
                 <div>
-                  <label className=" mb-2 text-sm font-medium text-gray-900 dark:text-gray-400">
+                  <label className="mb-2 text-sm font-medium text-gray-900 dark:text-gray-400">
                     Department
                   </label>
                   <input
@@ -210,12 +221,12 @@ const EditModal: React.FC<EditModalProps> = ({
                     name="department"
                     value={formData.department || ""}
                     onChange={handleChange}
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600  w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                   />
                 </div>
 
                 <div>
-                  <label className=" mb-2 text-sm font-medium text-gray-900 dark:text-gray-400">
+                  <label className="mb-2 text-sm font-medium text-gray-900 dark:text-gray-400">
                     Phone Number
                   </label>
                   <input
@@ -226,6 +237,46 @@ const EditModal: React.FC<EditModalProps> = ({
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                   />
                 </div>
+
+                {/* Business Unit Dropdown */}
+                <div>
+                  <label className="mb-2 text-sm font-medium text-gray-900 dark:text-gray-400">
+                    Business Unit
+                  </label>
+                  <select
+                    name="businessUnitId"
+                    value={formData.businessUnitId || ""}
+                    onChange={handleChange}
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                  >
+                    <option value="">Select Business Unit</option>
+                    {businessUnits.map((unit) => (
+                      <option key={unit.id} value={unit.id}>
+                        {unit.name} {unit.code && `(${unit.code})`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Active Directory Dropdown */}
+                <div>
+                  <label className="mb-2 text-sm font-medium text-gray-900 dark:text-gray-400">
+                    Active Directory
+                  </label>
+                  <select
+                    name="activeDirectoryId"
+                    value={formData.activeDirectoryId || ""}
+                    onChange={handleChange}
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                  >
+                    <option value="">Select Active Directory</option>
+                    {activeDirectories.map((directory) => (
+                      <option key={directory.id} value={directory.id}>
+                        {directory.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </form>
           </div>
@@ -234,25 +285,24 @@ const EditModal: React.FC<EditModalProps> = ({
         return (
           <>
             <div className="mb-4">
-              <label className="block text-gray-700 mb-2">Name</label>
+              <label className="block text-sm font-medium text-gray-900 dark:text-gray-400 mb-2">
+                Name*
+              </label>
               <input
                 type="text"
                 name="name"
                 value={formData.name || ""}
                 onChange={handleChange}
-                className="w-full p-2 border rounded"
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                required
               />
             </div>
-            <div>
-              <label
-                htmlFor="code"
-                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-              >
-                Code *
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-900 dark:text-gray-400 mb-2">
+                Code*
               </label>
               <input
                 type="text"
-                id="code"
                 name="code"
                 value={formData.code || ""}
                 onChange={handleChange}
@@ -262,14 +312,10 @@ const EditModal: React.FC<EditModalProps> = ({
               />
             </div>
             <div>
-              <label
-                htmlFor="description"
-                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-              >
+              <label className="block text-sm font-medium text-gray-900 dark:text-gray-400 mb-2">
                 Description
               </label>
               <textarea
-                id="description"
                 name="description"
                 rows={3}
                 value={formData.description || ""}
@@ -284,24 +330,23 @@ const EditModal: React.FC<EditModalProps> = ({
         return (
           <>
             <div className="mb-4">
-              <label className="block text-gray-700 mb-2">Name</label>
+              <label className="block text-sm font-medium text-gray-900 dark:text-gray-400 mb-2">
+                Name*
+              </label>
               <input
                 type="text"
                 name="name"
                 value={formData.name || ""}
                 onChange={handleChange}
-                className="w-full p-2 border rounded"
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                required
               />
             </div>
             <div>
-              <label
-                htmlFor="ad-description"
-                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-              >
-                Description *
+              <label className="block text-sm font-medium text-gray-900 dark:text-gray-400 mb-2">
+                Description*
               </label>
               <textarea
-                id="ad-description"
                 name="description"
                 rows={4}
                 value={formData.description || ""}
@@ -320,8 +365,7 @@ const EditModal: React.FC<EditModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/[0.50] flex items-center justify-center p-6 z-70">
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 lg:min-w-l  max-w-md relative">
-        {/* Close button (X icon) */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
         <button
           onClick={handleCancel}
           className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
@@ -336,7 +380,7 @@ const EditModal: React.FC<EditModalProps> = ({
 
         <form onSubmit={handleSubmit}>
           {renderFormFields()}
-          <div className="flex justify-start gap-2 mt-4">
+          <div className="flex justify-start gap-2 mt-6">
             <button
               type="submit"
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
