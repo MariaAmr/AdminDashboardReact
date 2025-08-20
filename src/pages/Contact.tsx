@@ -43,7 +43,7 @@ const Contact = () => {
       initial="hidden"
       animate="visible"
       variants={containerVariants}
-      className="relative z-10 overflow-hidden bg-white py-10 dark:bg-dark lg:py-0"
+      className="relative z-10 overflow-hidden  rounded-xl md:pb-15 lg:py-0"
     >
       <div className="container mx-auto px-4 sm:px-0 md:px-20 dark:bg-gray-700 ">
         <div className="-mx-4 flex flex-wrap lg:justify-between py-5">
